@@ -1,0 +1,4 @@
+{"context": 2000, "items": 240, "time_per_sample_mean": 0.5412346522013347, "time_per_sample_std": 0.011137619392525694}
+{"context": 4000, "items": 120, "time_per_sample_mean": 1.0969956378142038, "time_per_sample_std": 0.001815489344181923}
+{"context": 8000, "items": 60, "time_per_sample_mean": 2.8370416204134625, "time_per_sample_std": 0.003488559477771573}
+{"context": 16000, "items": 20, "time_per_sample_mean": 10.492114090919495, "time_per_sample_std": 0.05421578519433621}
