@@ -1,9 +1,13 @@
-# from resourse_benchmarks.context_splitting.benchmarker import SplitBenchmarker
-from benchmarker import SplitBenchmarker
+try:
+    from resourse_benchmarks.context_splitting.benchmarker import SplitBenchmarker
+except ModuleNotFoundError:
+    from benchmarker import SplitBenchmarker
+from omegaconf import OmegaConf
 
-model_name = "deepseek-ai/deepseek-coder-1.3b-base"
-benchmarker = SplitBenchmarker(model_name)
+config_path = "config.yaml"
+config = OmegaConf.load(config_path)
 
-time_used = benchmarker.evaluate(seq_len=512, num_samples=10, batch_size=4)
+benchmarker = SplitBenchmarker(config)
+time_used = benchmarker.evaluate_all()
 
 pass

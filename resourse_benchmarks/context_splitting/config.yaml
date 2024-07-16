@@ -1,2 +1,8 @@
+model_name: "deepseek-ai/deepseek-coder-1.3b-base"
 gen_len: 100
-batch_size: 4
+doc_len: 1000 # length of each retrieved document
+main_len: 1000 # length of the input file that infers generation
+num_files: [2, 4, 8, 16] # Number of files in context including main
+batch_sizes_full: [4,3,2,1] # bs for full context (doc_len*num_files)
+batch_sizes_single: 4 # bs for full context (doc_len*num_files)
+num_samples: 2
