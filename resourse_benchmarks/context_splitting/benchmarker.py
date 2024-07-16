@@ -1,3 +1,4 @@
+import json
 import time
 import numpy as np
 from tqdm import tqdm
@@ -11,21 +12,19 @@ class SplitBenchmarker:
         self.tokenizer = AutoTokenizer.from_pretrained(config.model_name)
         self.model = AutoModelForCausalLM.from_pretrained(config.model_name).to("cuda")
 
-        self.batch_sizes = config.batch_sizes_full
-        self.batch_sizes.append(config.batch_sizes_single)
+        self.batch_sizes = config.batch_sizes
         self.gen_len = config.gen_len
         self.contexts = self.get_context_sizes(config.doc_len, config.main_len, config.num_files)
         self.num_files = config.num_files
-        self.num_samples = config.num_samples
+        self.num_batches = config.num_batches
+        self.output_file = config.output_file
 
     @staticmethod
     def get_context_sizes(doc_len, main_len, num_files_lst) -> list[int]:
-        full_contexts = [
+        contexts = [
             ((num_files - 1) * doc_len + main_len) for num_files in num_files_lst
         ]
-        full_contexts.append(doc_len + main_len)
-
-        return full_contexts
+        return contexts
 
     def generate_tokens(
         self,
@@ -59,7 +58,7 @@ class SplitBenchmarker:
         batch_size: int,
     ):
         inputs = []
-        for _ in range(self.num_samples):
+        for _ in range(self.num_batches):
             inputs.append(self.generate_random_input((batch_size, seq_len)))
 
         time_used = []
@@ -67,13 +66,24 @@ class SplitBenchmarker:
             tt = time.time()
             self.generate_tokens(input_ids=input_ids, gen_len=self.gen_len)
             time_used.append(time.time() - tt)
-        time_used = np.array(time_used)
+        time_used = np.array(time_used)/batch_size
+        time_mean = time_used.mean()
+        time_std = time_used.std()
 
-        print(f"Seq len = {seq_len}, Time used: {time_used.mean():.2f}±{time_used.std():.2f} s")
+        print(f"Seq len = {seq_len}, Time used: {time_mean:.2f}±{time_std:.2f} s")
 
-        return time_used
+        return time_mean, time_std
 
     def evaluate_all(self):
 
+        print(f"Results would be saved to {self.output_file}")
+        results = []
         for context, batch_size in zip(self.contexts, self.batch_sizes):
-            self.evaluate_single(context, batch_size)
+            time_mean, time_std = self.evaluate_single(context, batch_size)
+            result = {"context": context, "items": self.num_batches * batch_size, "time_per_sample_mean": time_mean, "time_per_sample_std": time_std}
+            results.append(result)
+            with open(self.output_file, "a") as f:
+                json.dump(result, f)
+                f.write("\n")
+
+        return results
