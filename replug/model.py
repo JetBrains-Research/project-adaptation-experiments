@@ -33,12 +33,12 @@ class RePlugModel(nn.Module):
         for _ in tqdm(range(max_new_tokens)):
             logits_list = []
             new_kvs = []
-            for i, (input_ids, cur_kv) in enumerate(zip(current_input_ids, past_kvs)):
+            for input_ids, cur_kv in zip(current_input_ids, past_kvs):
                 out = self.base_model(input_ids, past_key_values=cur_kv)
                 logits = out.logits[:, -1:]
                 logits_list.append(logits)
                 new_kvs.append(out.past_key_values)
-            aggr_out = self._aggregate_outs(logits_list)
+            aggr_out = self._aggregate_logits(logits_list, input_instance.context_weights)
             new_token = torch.argmax(aggr_out, dim=-1, keepdim=True)
             generated.append(new_token)
             current_input_ids = [new_token] * len(input_instance)
@@ -47,12 +47,9 @@ class RePlugModel(nn.Module):
         generated_text = self.tokenizer.decode(generated[0])
         return generated_text
 
-    def _aggregate_outs(self, out_list):
-        # out_list = []
-        # norm_out_list = [out.softmax(dim=-1) for out in out_list]
-        norm_out_list = out_list
-
-        return torch.cat(norm_out_list, dim=1).mean(dim=1)
+    def _aggregate_logits(self, logits_list: list[torch.Tensor], context_weights: list[float]):
+        norm_logits_list = [logits * w for logits, w in zip(logits_list, context_weights)]
+        return torch.cat(norm_logits_list, dim=1).sum(dim=1)
 
 
 if __name__ == '__main__':
