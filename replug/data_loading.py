@@ -130,6 +130,30 @@ def get_raw_datapoint(ds: Dataset, idx: int, sample_size: int = 100) -> RawDatap
     )
 
 
+def filter_by_extension(repo_storage: RepoStorage, extension: str) -> RepoStorage:
+    filtered_file_names = []
+    filtered_contents = []
+    for filename, content in zip(repo_storage.filename, repo_storage.content):
+        if filename.endswith(extension):
+            filtered_file_names.append(filename)
+            filtered_contents.append(content)
+    return RepoStorage(filtered_file_names, filtered_contents)
+
+
+def get_all_data_points(ds: Dataset, filter_by_extension: str | None = '.py') -> list[RawDatapoint]:
+    data_points = []
+    for s in ds:
+        completion_file = FileStorage(**s['completion_file'])
+        repo_snapshot = RepoStorage(**s['repo_snapshot'])
+        data_point = RawDatapoint(
+            completion_file=completion_file,
+            repo_snapshot=repo_snapshot,
+            completion_lines=s['completion_lines'],
+        )
+        data_points.append(data_point)
+    return data_points
+
+
 def split_by_line(file_content: str, line_idx: int) -> SplittedFile:
     lines = file_content.split('\n')
     return SplittedFile(
@@ -139,14 +163,18 @@ def split_by_line(file_content: str, line_idx: int) -> SplittedFile:
     )
 
 
-def get_examples_from_raw_datapoint(raw_datapoint: RawDatapoint) -> list[RePlugInstance]:
+def get_examples_from_raw_datapoint(raw_datapoint: RawDatapoint,
+                                    line_cat_to_get: str | None = 'inproject') -> list[RePlugInstance]:
     # completion_file, repo_snapshot, completion_lines = raw_datapoint
     example_batches = list()
     for line_cat, line_idxs in raw_datapoint.completion_lines.items():
+        if line_cat_to_get is not None and line_cat != line_cat_to_get:
+            continue
         for line_idx in line_idxs:
             example_contexts = list()
             splitted_file = split_by_line(raw_datapoint.completion_file.content, line_idx)
-            for filename, content in zip(raw_datapoint.repo_snapshot.filename, raw_datapoint.repo_snapshot.content):
+            for filename, content in zip(raw_datapoint.repo_snapshot.filename,
+                                         raw_datapoint.repo_snapshot.content):
                 example_contexts.append(
                     RePlugExample(
                         prefix=PATTERN.format(
