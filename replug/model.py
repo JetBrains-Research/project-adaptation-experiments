@@ -27,7 +27,7 @@ class RePlugModel(nn.Module):
     def _aggregate_outs(self, out_list):
         # out_list = []
         # norm_out_list = [out.softmax(dim=-1) for out in out_list]
-        norm_out_list = out_l
+        norm_out_list = out_list
 
         return torch.cat(norm_out_list, dim=1).mean(dim=1)
 
