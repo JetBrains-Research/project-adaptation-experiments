@@ -17,6 +17,7 @@ class RePlugModel(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = torch.device(device)
 
+    @torch.inference_mode()
     def generate(self,
                  input_instance: RePlugInstance,
                  max_new_tokens: int = 10,
