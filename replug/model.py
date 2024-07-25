@@ -16,12 +16,16 @@ class RePlugModel(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = torch.device(device)
 
-    def generate(self, input_instance: RePlugInstance, max_new_tokens: int = 10) -> str:
+    def generate(self,
+                 input_instance: RePlugInstance,
+                 max_new_tokens: int = 10,
+                 max_length: int = 16000) -> str:
         past_kvs = [None] * len(input_instance)
         current_input_ids = []
 
         for sample in input_instance:
-            inputs = self.tokenizer(sample.prefix, return_tensors='pt')
+            inputs = self.tokenizer(sample.prefix, return_tensors='pt',
+                                     max_length=max_length)
             input_ids = inputs['input_ids'].to(self.device)
             current_input_ids.append(input_ids)
 
