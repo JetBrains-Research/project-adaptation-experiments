@@ -139,7 +139,7 @@ def split_by_line(file_content: str, line_idx: int) -> SplittedFile:
     )
 
 
-def get_examples_from_raw_datapoint(raw_datapoint: RawDatapoint) -> list[list[RePlugExample]]:
+def get_examples_from_raw_datapoint(raw_datapoint: RawDatapoint) -> list[RePlugInstance]:
     # completion_file, repo_snapshot, completion_lines = raw_datapoint
     example_batches = list()
     for line_cat, line_idxs in raw_datapoint.completion_lines.items():
