@@ -1,9 +1,11 @@
 import random
 
 from datasets import load_dataset
+from torch.utils.data import Dataset
 
 
 PATTERN = '# {fn_repo}\n\n{cont_repo}\n\n# {fn_compl}\n\n{file_prefix}'
+
 
 config_names = [
     'small_context',
@@ -37,12 +39,13 @@ def split_by_line(file_content: str, line_idx: int):
 
 def get_examples_from_raw_datapoint(raw_datapoint):
     completion_file, repo_snapshot, completion_lines = raw_datapoint
-    examples = list()
+    example_batches = list()
     for line_cat, line_idxs in completion_lines.items():
         for line_idx in line_idxs:
+            example_contexts = list()
             file_prefix, ground_truth, file_postfix = split_by_line(completion_file['content'], line_idx)
             for filename, content in zip(repo_snapshot['filename'], repo_snapshot['content']):
-                examples.append(
+                example_contexts.append(
                     {
                         'prefix': PATTERN.format(
                                     fn_repo=filename,
@@ -51,20 +54,25 @@ def get_examples_from_raw_datapoint(raw_datapoint):
                                     file_prefix=file_prefix,
                                 ),
                         'ground_truth': ground_truth,
-                        'postfix': file_postfix,
+                        'file_prefix': file_prefix,
+                        'file_postfix': file_postfix,
+                        'line_cat': line_cat
                     }
                 )
-    return examples
+            example_batches.append(example_contexts)
+    return example_batches
 
 
 if __name__ == '__main__':
     ds = load_dataset('JetBrains-Research/lca-project-level-code-completion', config_name, split='test')
     raw_dp = get_raw_datapoint(ds, 0, sample_size=3)
-    examples = get_examples_from_raw_datapoint(raw_dp)
+    example_batches = get_examples_from_raw_datapoint(raw_dp)
     # print(examples)
     # print(raw_dp)
-    for example in examples:
-        print('='*100)
-        print(example['prefix'][:1_000] + '\n\n...\n\n', example['prefix'][-1_000:])
-        print('-'*100)
-        print(example['ground_truth'])
+    for example_batch in example_batches:
+        for example in example_batch:
+            print('='*100)
+            print(example['prefix'][:1_000] + '\n\n...\n\n', example['prefix'][-1_000:])
+            print('-'*100)
+            print(example['ground_truth'])
+        break

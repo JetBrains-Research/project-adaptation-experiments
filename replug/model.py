@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from tqdm import tqdm
 
 
 class RePlugModel(nn.Module):
@@ -19,12 +20,15 @@ class RePlugModel(nn.Module):
         return new_list_input_ids
 
     def generate(self, list_input_ids: list[torch.LongTensor], max_new_tokens: int = 10):
-        for _ in range(max_new_tokens):
+        for _ in tqdm(range(max_new_tokens)):
             list_input_ids = self.generate_one_token(list_input_ids)
         return list_input_ids
 
     def _aggregate_outs(self, out_list):
-        norm_out_list = [out.softmax(dim=-1) for out in out_list]
+        # out_list = []
+        # norm_out_list = [out.softmax(dim=-1) for out in out_list]
+        norm_out_list = out_l
+
         return torch.cat(norm_out_list, dim=1).mean(dim=1)
 
 
@@ -40,4 +44,3 @@ if __name__ == '__main__':
     print(output)
     for _output in output:
         print(tokenizer.batch_decode(_output))
-
