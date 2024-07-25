@@ -145,6 +145,7 @@ def get_all_data_points(ds: Dataset, filter_by_extension: str | None = '.py') ->
     for s in ds:
         completion_file = FileStorage(**s['completion_file'])
         repo_snapshot = RepoStorage(**s['repo_snapshot'])
+        repo_snapshot = filter_by_extension(repo_snapshot, filter_by_extension)
         data_point = RawDatapoint(
             completion_file=completion_file,
             repo_snapshot=repo_snapshot,
