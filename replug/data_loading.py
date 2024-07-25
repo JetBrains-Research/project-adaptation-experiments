@@ -72,6 +72,10 @@ class RePlugInstance:
     
     def __iter__(self):
         return iter(self.examples)
+
+    @property
+    def context_weights(self):
+        return [example.context_weight for example in self.examples]
     
     def define_context_weights(self, context_weights: list[float] | None = None):
         if context_weights is None:
