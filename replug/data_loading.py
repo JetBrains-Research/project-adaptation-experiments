@@ -144,12 +144,12 @@ def filter_by_extension(repo_storage: RepoStorage, extension: str) -> RepoStorag
     return RepoStorage(filtered_file_names, filtered_contents)
 
 
-def get_all_raw_data_points(ds: Dataset, filter_by_extension: str | None = '.py') -> list[RawDatapoint]:
+def get_all_raw_data_points(ds: Dataset, extension_to_get: str | None = '.py') -> list[RawDatapoint]:
     data_points = []
     for s in ds:
         completion_file = FileStorage(**s['completion_file'])
         repo_snapshot = RepoStorage(**s['repo_snapshot'])
-        repo_snapshot = filter_by_extension(repo_snapshot, filter_by_extension)
+        repo_snapshot = filter_by_extension(repo_snapshot, extension_to_get)
         data_point = RawDatapoint(
             completion_file=completion_file,
             repo_snapshot=repo_snapshot,
