@@ -64,7 +64,7 @@ if __name__ == '__main__':
     else:
         context_variants = [('Remember Cambodia', 0.1),
                             ('Remember Mongolia', 0.1), 
-                            ('Remember Vanuatu', 0.5),
+                            ('Remember Vanuatu', 0.9),
                             ('Remember Chad', 0.1), 
                             ('Remember Cuba', 0.1)]
     file_prefix = '\n\nSo I remember the following five countries: '
