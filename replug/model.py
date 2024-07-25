@@ -13,6 +13,7 @@ class RePlugModel(nn.Module):
                                                                torch_dtype=torch.bfloat16,
                                                                attn_implementation='flash_attention_2',
                                                                device_map=device)
+        self.base_model.eval()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.device = torch.device(device)
 
