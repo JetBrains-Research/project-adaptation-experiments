@@ -54,13 +54,21 @@ class RePlugModel(nn.Module):
 
 
 if __name__ == '__main__':
-    context_variants = ['Remember Cambodia',
-                        'Remember Mongolia', 
-                        'Remember Vanuatu',
-                        'Remember Chad', 
-                        'Remember Cuba']
+    rand_weights = False
+    if rand_weights:
+        context_variants = [('Remember Cambodia', torch.rand(1).item()),
+                            ('Remember Mongolia', torch.rand(1).item()), 
+                            ('Remember Vanuatu', torch.rand(1).item()),
+                            ('Remember Chad', torch.rand(1).item()), 
+                            ('Remember Cuba', torch.rand(1).item())]
+    else:
+        context_variants = [('Remember Cambodia', 0.1),
+                            ('Remember Mongolia', 0.1), 
+                            ('Remember Vanuatu', 0.5),
+                            ('Remember Chad', 0.1), 
+                            ('Remember Cuba', 0.1)]
     file_prefix = '\n\nSo I remember the following five countries: '
-    examples = [RePlugExample(cv + file_prefix, None, None, None, None, torch.rand(1).item()) for cv in context_variants]
+    examples = [RePlugExample(cv + file_prefix, *([None] * 4), w) for cv, w in context_variants]
     device = 'cuda:2'
     model_inputs = RePlugInstance(examples)
     model = RePlugModel('gpt2', device)
