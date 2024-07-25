@@ -80,6 +80,10 @@ class RePlugInstance:
     @property
     def line_category(self):
         return self.examples[0].line_category
+
+    @property
+    def ground_truth(self):
+        return self.examples[0].ground_truth
     
     def define_context_weights(self, context_weights: list[float] | None = None):
         if context_weights is None:
