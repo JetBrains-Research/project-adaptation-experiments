@@ -54,13 +54,13 @@ class RePlugModel(nn.Module):
 
 
 if __name__ == '__main__':
-    context_variants = ['Remember Cambodia ',
-                        'Remember Mongolia ', 
-                        'Remember Vanuatu ',
-                        'Remember Chad ', 
-                        'Remember Cuba ']
-    file_prefix = '\n\nSo I know the following five countries: '
-    examples = [RePlugExample(cv + file_prefix, None, None, None, None, 1.0) for cv in context_variants]
+    context_variants = ['Remember Cambodia',
+                        'Remember Mongolia', 
+                        'Remember Vanuatu',
+                        'Remember Chad', 
+                        'Remember Cuba']
+    file_prefix = '\n\nSo I remember the following five countries: '
+    examples = [RePlugExample(cv + file_prefix, None, None, None, None, torch.rand(1).item()) for cv in context_variants]
     device = 'cuda:2'
     model_inputs = RePlugInstance(examples)
     model = RePlugModel('gpt2', device)
