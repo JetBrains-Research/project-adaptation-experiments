@@ -42,12 +42,22 @@ class RePlugModel(nn.Module):
                 new_kvs.append(out.past_key_values)
             aggr_out = self._aggregate_logits(logits_list, input_instance.context_weights)
             new_token = torch.argmax(aggr_out, dim=-1, keepdim=True)
-            generated.append(new_token)
+            generated.append(new_token.item())
             current_input_ids = [new_token] * len(input_instance)
             past_kvs = new_kvs
-        generated = torch.cat(generated, dim=1)
-        generated_text = self.tokenizer.decode(generated[0])
+            if self.stopping_criterion(generated):
+                break
+        generated_text = self.tokenizer.decode(generated)
         return generated_text
+
+    def stopping_criterion(self, generated_tokens: list[int]) -> bool:
+        # skip intro new lines
+        non_word_tokens_prefix = 0
+        for token in generated_tokens:
+            if '\n' not in self.tokenizer.decode([token]):
+                break
+            non_word_tokens_prefix += 1
+        return '\n' in self.tokenizer.decode(generated_tokens[non_word_tokens_prefix:])
 
     def _aggregate_logits(self, logits_list: list[torch.Tensor], context_weights: list[float]):
         norm_logits_list = [logits * w for logits, w in zip(logits_list, context_weights)]
