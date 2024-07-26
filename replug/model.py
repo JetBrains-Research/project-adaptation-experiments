@@ -40,17 +40,16 @@ class RePlugModel(nn.Module):
         generated = []
         for _ in tqdm(range(max_new_tokens), disable=not verbose):
             logits_list = []
-            new_kvs = []
             file_level_logits = None
-            for (is_project_ctxt, input_ids), cur_kv in zip(current_input_ids, past_kvs):
-                out = self.base_model(input_ids, past_key_values=cur_kv)
+            for n, (is_project_ctxt, input_ids) in enumerate(current_input_ids):
+                out = self.base_model(input_ids, past_key_values=past_kvs[n])
                 logits = out.logits[:, -1:]
                 logits = torch.log_softmax(logits, dim=2)
                 if is_project_ctxt:
                     logits_list.append(logits)
                 elif prob_similarity_weights:
                     file_level_logits = logits
-                new_kvs.append(out.past_key_values)
+                past_kvs[n] = out.past_key_values
             # print(len(current_input_ids))
             if prob_similarity_weights:
                 if file_level_logits is None:
@@ -65,7 +64,6 @@ class RePlugModel(nn.Module):
                 current_input_ids = [(False, new_token)] + [(True, new_token)] * len(input_instance)
             else:
                 current_input_ids = [(True, new_token)] * len(input_instance)
-            past_kvs = new_kvs
             if self.stopping_criterion(generated):
                 break
         generated_text = self.tokenizer.decode(generated)
