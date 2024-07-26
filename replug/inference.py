@@ -2,9 +2,25 @@ import click
 from datasets import load_dataset
 import torch
 from tqdm import tqdm
+import wandb
 
 from data_loading import get_examples_from_raw_datapoint, get_all_raw_data_points
 from model import RePlugModel
+
+
+def init_wandb(model_name: str,
+               top_k: int,
+               max_new_tokens: int,
+               prob_similarity_weights: bool,
+               top_k_selection: str):
+    wandb.init(project='fast-iterations-replug')
+    wandb.config.update({
+        'model_name': model_name,
+        'top_k': top_k,
+        'max_new_tokens': max_new_tokens,
+        'prob_similarity_weights': prob_similarity_weights,
+        'top_k_selection': top_k_selection
+    })
 
 
 @click.command()
@@ -12,13 +28,19 @@ from model import RePlugModel
 @click.option('--top-k', type=int, default=3)
 @click.option('--max-new-tokens', type=int, default=128)
 @click.option('--device-num', type=int, default=0)
+@click.option('--prob-similarity-weights', type=bool, default=False)
+@click.option('--top-k-selection', type=str, default='path_distances')
+@click.option('--model-name', type=str, default='deepseek-ai/deepseek-coder-1.3b-base')
 def main(print_generated: bool = False,
          top_k: int = 3,
          max_new_tokens: int = 25,
          device_num: int = 0,
-         ):
+         prob_similarity_weights: bool = False,
+         top_k_selection: str = 'path_distances',
+         model_name: str = 'deepseek-ai/deepseek-coder-1.3b-base'):
+    init_wandb(model_name, top_k, max_new_tokens,
+               prob_similarity_weights, top_k_selection)
     device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
-    model_name = 'deepseek-ai/deepseek-coder-1.3b-base'
     model = RePlugModel(model_name, device)
 
     ds = load_dataset('JetBrains-Research/lca-project-level-code-completion',
@@ -39,10 +61,14 @@ def main(print_generated: bool = False,
     total = 0
     correct = 0
     for instance in pbar:
-        instance.calculate_path_distances_weights()
+        if top_k_selection == 'path_distances':
+            instance.calculate_path_distances_weights()
+        else:
+            raise NotImplementedError(f'Top k selection {top_k_selection} not implemented')
         instance = instance.get_top_k_contexts(top_k)
-        # print(len(instance))
-        generated = model.generate(instance, max_new_tokens=max_new_tokens, prob_similarity_weights=True)
+        generated = model.generate(instance,
+                                   max_new_tokens=max_new_tokens,
+                                   prob_similarity_weights=prob_similarity_weights)
         total += 1
         generated = generated.strip()
         assert not '\n' in generated, f'Generated contains multiple lines: {repr(generated)}'
@@ -51,6 +77,13 @@ def main(print_generated: bool = False,
         if generated == ground_truth:
             correct += 1
         pbar.set_description(f'EM: {correct / total:.1%}')
+
+        wandb.log({
+            'EM': correct / total,
+            'total': total,
+            'correct': correct
+        })
+
         if print_generated:
             print('=' * 100)
             print('Line cat: ', instance.line_category)
