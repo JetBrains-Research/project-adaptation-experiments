@@ -8,9 +8,9 @@ from model import RePlugModel
 
 
 @click.command()
-@click.option('--print_generated', type=bool, default=False)
-@click.option('--top_k', type=int, default=3)
-@click.option('--max_new_tokens', type=int, default=25)
+@click.option('--print-generated', type=bool, default=False)
+@click.option('--top-k', type=int, default=3)
+@click.option('--max-new-tokens', type=int, default=128)
 def main(print_generated: bool = False,
          top_k: int = 3,
          max_new_tokens: int = 25):
@@ -41,7 +41,9 @@ def main(print_generated: bool = False,
         generated = model.generate(instance, max_new_tokens=max_new_tokens)
         total += 1
         generated = generated.strip()
+        assert not '\n' in generated, f'Generated contains multiple lines: {repr(generated)}'
         ground_truth = instance.ground_truth.strip()
+        assert not '\n' in ground_truth, f'Ground truth contains multiple lines: {repr(ground_truth)}'
         if generated == ground_truth:
             correct += 1
         pbar.set_description(f'EM: {correct / total:.1%}')
