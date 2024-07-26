@@ -1,3 +1,4 @@
+import click
 from datasets import load_dataset
 import torch
 from tqdm import tqdm
@@ -6,29 +7,51 @@ from data_loading import get_examples_from_raw_datapoint, get_all_raw_data_point
 from model import RePlugModel
 
 
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-model_name = 'deepseek-ai/deepseek-coder-1.3b-base'
-model = RePlugModel(model_name, device)
+@click.command()
+@click.option('--print_generated', type=bool, default=False)
+@click.option('--top_k', type=int, default=3)
+@click.option('--max_new_tokens', type=int, default=25)
+def main(print_generated: bool = False,
+         top_k: int = 3,
+         max_new_tokens: int = 25):
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    model_name = 'deepseek-ai/deepseek-coder-1.3b-base'
+    model = RePlugModel(model_name, device)
 
-ds = load_dataset('JetBrains-Research/lca-project-level-code-completion',
-                  'medium_context',
-                   split='test')
+    ds = load_dataset('JetBrains-Research/lca-project-level-code-completion',
+                    'medium_context',
+                    split='test')
 
-all_raw_data_points = get_all_raw_data_points(ds, extension_to_get='.py')
+    all_raw_data_points = get_all_raw_data_points(ds, extension_to_get='.py')
 
-instances = []
+    instances = []
 
-for raw_dp in tqdm(all_raw_data_points, desc='Processing raw data points'):
-    curr_instances = get_examples_from_raw_datapoint(raw_dp, line_cat_to_get='inproject')
-    instances.extend(curr_instances)
+    for raw_dp in tqdm(all_raw_data_points, desc='Processing raw data points'):
+        curr_instances = get_examples_from_raw_datapoint(raw_dp, line_cat_to_get='inproject')
+        instances.extend(curr_instances)
 
-print(f'Got {len(instances)} instances')
+    print(f'Total {len(instances)} instances')
+
+    pbar = tqdm(instances, desc='Progress')
+    total = 0
+    correct = 0
+    for instance in pbar:
+        instance.calculate_path_distances_weights()
+        instance = instance.get_top_k_contexts(top_k)
+        generated = model.generate(instance, max_new_tokens=max_new_tokens)
+        total += 1
+        generated = generated.strip()
+        ground_truth = instance.ground_truth.strip()
+        if generated == ground_truth:
+            correct += 1
+        pbar.set_description(f'EM: {correct / total:.1%}')
+        if print_generated:
+            print('=' * 100)
+            print('Line cat: ', instance.line_category)
+            print('---- Generated ----\n', generated)
+            print('--- Ground truth ----\n', instance.ground_truth)
+            print('-' * 100)
 
 
-for instance in instances:
-    print('=' * 100)
-    print('Line cat: ', instance.line_category)
-    generated = model.generate(instance, max_new_tokens=25)
-    print('---- Generated ----\n', generated)
-    print('--- Ground truth ----\n', instance.ground_truth)
-    print('-' * 100)
+if __name__ == '__main__':
+    main()
