@@ -10,7 +10,9 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 model_name = 'deepseek-ai/deepseek-coder-1.3b-base'
 model = RePlugModel(model_name, device)
 
-ds = load_dataset('JetBrains-Research/lca-project-level-code-completion', 'medium_context', split='test')
+ds = load_dataset('JetBrains-Research/lca-project-level-code-completion',
+                  'medium_context',
+                   split='test')
 
 all_raw_data_points = get_all_raw_data_points(ds, extension_to_get='.py')
 
@@ -22,6 +24,7 @@ for raw_dp in tqdm(all_raw_data_points, desc='Processing raw data points'):
 
 print(f'Got {len(instances)} instances')
 
+
 for instance in instances:
     print('=' * 100)
     print('Line cat: ', instance.line_category)
@@ -29,7 +32,3 @@ for instance in instances:
     print('---- Generated ----\n', generated)
     print('--- Ground truth ----\n', instance.ground_truth)
     print('-' * 100)
-
-
-
-
