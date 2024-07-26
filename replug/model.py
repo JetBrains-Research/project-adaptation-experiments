@@ -39,6 +39,7 @@ class RePlugModel(nn.Module):
             for input_ids, cur_kv in zip(current_input_ids, past_kvs):
                 out = self.base_model(input_ids, past_key_values=cur_kv)
                 logits = out.logits[:, -1:]
+                logits = torch.log_softmax(logits, dim=2)
                 logits_list.append(logits)
                 new_kvs.append(out.past_key_values)
             aggr_out = self._aggregate_logits(logits_list, input_instance.context_weights)
@@ -53,8 +54,8 @@ class RePlugModel(nn.Module):
 
     def stopping_criterion(self, generated_tokens: list[int]) -> bool:
         # skip intro new lines
-        if len(generated_tokens) < 5:
-            return False
+        # if len(generated_tokens) < 5:
+        #     return False
         new_line_prefix = 0
         for token in generated_tokens:
             if '\n' not in self.tokenizer.decode([token]):
@@ -76,15 +77,15 @@ if __name__ == '__main__':
                             ('Remember Chad', torch.rand(1).item()), 
                             ('Remember Cuba', torch.rand(1).item())]
     else:
-        context_variants = [('Remember Cambodia', 0.1),
-                            ('Remember Mongolia', 0.1), 
-                            ('Remember Vanuatu', 0.9),
+        context_variants = [('Remember Cambodia', 0.4),
+                            ('Remember Mongolia', 0.5), 
+                            ('Remember Thailand', 0.1),
                             ('Remember Chad', 0.1), 
                             ('Remember Cuba', 0.1)]
     file_prefix = '\n\nSo I remember the following five countries: '
     examples = [RePlugExample(cv + file_prefix, *([None] * 4), w) for cv, w in context_variants]
     device = 'cuda:2'
     model_inputs = RePlugInstance(examples)
-    model = RePlugModel('gpt2', device)
+    model = RePlugModel('mistralai/Mistral-7B-Instruct-v0.2', device)
     output = model.generate(model_inputs, max_new_tokens=25)
     print(output)
