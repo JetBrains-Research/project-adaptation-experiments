@@ -21,7 +21,8 @@ class RePlugModel(nn.Module):
     def generate(self,
                  input_instance: RePlugInstance,
                  max_new_tokens: int = 10,
-                 max_length: int = 16000) -> str:
+                 max_length: int = 16000,
+                 verbose: bool = False) -> str:
         past_kvs = [None] * len(input_instance)
         current_input_ids = []
 
@@ -32,7 +33,7 @@ class RePlugModel(nn.Module):
             current_input_ids.append(input_ids)
 
         generated = []
-        for _ in tqdm(range(max_new_tokens)):
+        for _ in tqdm(range(max_new_tokens), disable=not verbose):
             logits_list = []
             new_kvs = []
             for input_ids, cur_kv in zip(current_input_ids, past_kvs):
