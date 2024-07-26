@@ -53,12 +53,14 @@ class RePlugModel(nn.Module):
 
     def stopping_criterion(self, generated_tokens: list[int]) -> bool:
         # skip intro new lines
-        non_word_tokens_prefix = 0
+        if len(generated_tokens) < 5:
+            return False
+        new_line_prefix = 0
         for token in generated_tokens:
             if '\n' not in self.tokenizer.decode([token]):
                 break
-            non_word_tokens_prefix += 1
-        return '\n' in self.tokenizer.decode(generated_tokens[non_word_tokens_prefix:])
+            new_line_prefix += 1
+        return '\n' in self.tokenizer.decode(generated_tokens[new_line_prefix:])
 
     def _aggregate_logits(self, logits_list: list[torch.Tensor], context_weights: list[float]):
         norm_logits_list = [logits * w for logits, w in zip(logits_list, context_weights)]
