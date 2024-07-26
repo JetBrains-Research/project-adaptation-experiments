@@ -92,12 +92,15 @@ class RePlugInstance:
     def ground_truth(self):
         return self.examples[0].ground_truth
 
-    def write_file_level(self):
+    def get_file_level_example(self, weight: float = 0.) -> RePlugExample:
         file_level_example = deepcopy(self.examples[0])
-        file_level_example.prefix = self.examples[0].file_prefix
+        file_level_example.prefix = f'# {self.examples[0].completion_file.filename}\n{self.examples[0].file_prefix}'
         file_level_example.context_file = FileStorage('', '')
-        file_level_example.context_weight = 0.
-        self.file_level_example = file_level_example
+        file_level_example.context_weight = weight
+        return file_level_example
+
+    def write_file_level(self):
+        self.file_level_example = self.get_file_level_example()
     
     def define_context_weights(self, context_weights: list[float] | None = None):
         if context_weights is None:

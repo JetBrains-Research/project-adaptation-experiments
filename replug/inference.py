@@ -38,6 +38,9 @@ def main(print_generated: bool = False,
          prob_similarity_weights: bool = False,
          top_k_selection: str = 'path_distances',
          model_name: str = 'deepseek-ai/deepseek-coder-1.3b-base'):
+    if top_k_selection == 'file_level':
+        top_k = 1
+        prob_similarity_weights = False
     init_wandb(model_name, top_k, max_new_tokens,
                prob_similarity_weights, top_k_selection)
     device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
@@ -63,6 +66,8 @@ def main(print_generated: bool = False,
     for instance in pbar:
         if top_k_selection == 'path_distances':
             instance.calculate_path_distances_weights()
+        elif top_k_selection == 'file_level':
+            instance.examples = [instance.get_file_level_example(weight=1.)]
         else:
             raise NotImplementedError(f'Top k selection {top_k_selection} not implemented')
         instance = instance.get_top_k_contexts(top_k)

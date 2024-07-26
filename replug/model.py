@@ -58,11 +58,13 @@ class RePlugModel(nn.Module):
                 new_context_weights = self._recalculate_context_weights(file_level_logits, logits_list)
                 input_instance.define_context_weights(new_context_weights)
                 # TODO: weight normalization
-
             aggr_out = self._aggregate_logits(logits_list, input_instance.context_weights)
             new_token = torch.argmax(aggr_out, dim=-1, keepdim=True)
             generated.append(new_token.item())
-            current_input_ids = [(False, new_token)] + [(True, new_token)] * len(input_instance)
+            if prob_similarity_weights:
+                current_input_ids = [(False, new_token)] + [(True, new_token)] * len(input_instance)
+            else:
+                current_input_ids = [(True, new_token)] * len(input_instance)
             past_kvs = new_kvs
             if self.stopping_criterion(generated):
                 break
