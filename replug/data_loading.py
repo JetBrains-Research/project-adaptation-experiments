@@ -1,6 +1,7 @@
 import os
 import random
-from dataclasses import dataclass
+from copy import deepcopy
+from dataclasses import dataclass, asdict
 
 from datasets import load_dataset, Dataset
 
@@ -66,12 +67,18 @@ def path_distance(base_path, target_path):
 @dataclass
 class RePlugInstance:
     examples: list[RePlugExample]
+    file_level_example: RePlugExample | None = None
 
     def __len__(self):
         return len(self.examples)
     
     def __iter__(self):
-        return iter(self.examples)
+        # the first output is an example with file-level context
+        if self.file_level_example is not None:
+            yield False, self.file_level_example
+        for ex in self.examples:
+            yield True, ex
+
 
     @property
     def context_weights(self):
@@ -84,6 +91,13 @@ class RePlugInstance:
     @property
     def ground_truth(self):
         return self.examples[0].ground_truth
+
+    def write_file_level(self):
+        file_level_example = deepcopy(self.examples[0])
+        file_level_example.prefix = self.examples[0].file_prefix
+        file_level_example.context_file = FileStorage('', '')
+        file_level_example.context_weight = 0.
+        self.file_level_example = file_level_example
     
     def define_context_weights(self, context_weights: list[float] | None = None):
         if context_weights is None:

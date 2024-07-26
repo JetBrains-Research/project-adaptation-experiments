@@ -11,10 +11,13 @@ from model import RePlugModel
 @click.option('--print-generated', type=bool, default=False)
 @click.option('--top-k', type=int, default=3)
 @click.option('--max-new-tokens', type=int, default=128)
+@click.option('--device-num', type=int, default=0)
 def main(print_generated: bool = False,
          top_k: int = 3,
-         max_new_tokens: int = 25):
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+         max_new_tokens: int = 25,
+         device_num: int = 0,
+         ):
+    device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
     model_name = 'deepseek-ai/deepseek-coder-1.3b-base'
     model = RePlugModel(model_name, device)
 
@@ -38,7 +41,8 @@ def main(print_generated: bool = False,
     for instance in pbar:
         instance.calculate_path_distances_weights()
         instance = instance.get_top_k_contexts(top_k)
-        generated = model.generate(instance, max_new_tokens=max_new_tokens)
+        # print(len(instance))
+        generated = model.generate(instance, max_new_tokens=max_new_tokens, prob_similarity_weights=True)
         total += 1
         generated = generated.strip()
         assert not '\n' in generated, f'Generated contains multiple lines: {repr(generated)}'

@@ -22,30 +22,47 @@ class RePlugModel(nn.Module):
                  input_instance: RePlugInstance,
                  max_new_tokens: int = 10,
                  max_length: int = 16000,
-                 verbose: bool = False) -> str:
-        past_kvs = [None] * len(input_instance)
+                 verbose: bool = False,
+                 prob_similarity_weights: bool = False,
+                 ) -> str:
+        past_kvs = [None] * (len(input_instance) + int(prob_similarity_weights))
         current_input_ids = []
 
-        for sample in input_instance:
+        if prob_similarity_weights:
+            input_instance.write_file_level()  # Save file-level context example
+
+        for is_project_ctxt, sample in input_instance:
             inputs = self.tokenizer(sample.prefix, return_tensors='pt',
                                      max_length=max_length)
             input_ids = inputs['input_ids'].to(self.device)
-            current_input_ids.append(input_ids)
+            current_input_ids.append((is_project_ctxt, input_ids))
 
         generated = []
         for _ in tqdm(range(max_new_tokens), disable=not verbose):
             logits_list = []
             new_kvs = []
-            for input_ids, cur_kv in zip(current_input_ids, past_kvs):
+            file_level_logits = None
+            for (is_project_ctxt, input_ids), cur_kv in zip(current_input_ids, past_kvs):
                 out = self.base_model(input_ids, past_key_values=cur_kv)
                 logits = out.logits[:, -1:]
                 logits = torch.log_softmax(logits, dim=2)
-                logits_list.append(logits)
+                if is_project_ctxt:
+                    logits_list.append(logits)
+                elif prob_similarity_weights:
+                    file_level_logits = logits
                 new_kvs.append(out.past_key_values)
+            # print(len(current_input_ids))
+            if prob_similarity_weights:
+                if file_level_logits is None:
+                    raise ValueError('Something went wrong: file_level_logits is None')
+                new_context_weights = self._recalculate_context_weights(file_level_logits, logits_list)
+                input_instance.define_context_weights(new_context_weights)
+                # TODO: weight normalization
+
             aggr_out = self._aggregate_logits(logits_list, input_instance.context_weights)
             new_token = torch.argmax(aggr_out, dim=-1, keepdim=True)
             generated.append(new_token.item())
-            current_input_ids = [new_token] * len(input_instance)
+            current_input_ids = [(False, new_token)] + [(True, new_token)] * len(input_instance)
             past_kvs = new_kvs
             if self.stopping_criterion(generated):
                 break
@@ -67,6 +84,14 @@ class RePlugModel(nn.Module):
         norm_logits_list = [logits * w for logits, w in zip(logits_list, context_weights)]
         return torch.cat(norm_logits_list, dim=1).sum(dim=1)
 
+    def _recalculate_context_weights(self, file_level_logits: torch.Tensor, logits_list: list[torch.Tensor]) -> list[float]:
+        context_weights = list()
+        for logits in logits_list:
+            kl = torch.nn.functional.kl_div(logits.ravel(), file_level_logits.ravel(), log_target=True)
+            context_weights.append(kl.item())
+        # print(context_weights)
+        return context_weights
+
 
 if __name__ == '__main__':
     rand_weights = False
@@ -87,5 +112,5 @@ if __name__ == '__main__':
     device = 'cuda:2'
     model_inputs = RePlugInstance(examples)
     model = RePlugModel('mistralai/Mistral-7B-Instruct-v0.2', device)
-    output = model.generate(model_inputs, max_new_tokens=25)
+    output = model.generate(model_inputs, max_new_tokens=25, prob_similarity_weights=False)
     print(output)
