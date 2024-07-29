@@ -34,6 +34,7 @@ def init_wandb(model_name, top_k, max_new_tokens,
 @click.option('--model-name', type=str, default='deepseek-ai/deepseek-coder-1.3b-base')
 @click.option('--emb-model-name', type=str, default='thenlper/gte-large')
 @click.option('--line-cat', type=str, default='inproject')
+@click.option('--max-length', type=int, default=16_000)
 def main(print_generated: bool = False,
          top_k: int = 3,
          max_new_tokens: int = 25,
