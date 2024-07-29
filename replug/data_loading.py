@@ -134,6 +134,7 @@ class RePlugInstance:
             pd = path_distance(example.context_file.filename, example.completion_file.filename)
             example.context_weight = 1 / pd
 
+    @torch.inference_mode()
     def calculate_embedding_weights(self,
                                     model: PreTrainedModel,
                                     tokenizer: PreTrainedTokenizer,
