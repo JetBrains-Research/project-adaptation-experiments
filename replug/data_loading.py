@@ -99,6 +99,21 @@ class RePlugInstance:
         file_level_example.context_weight = weight
         return file_level_example
 
+    def get_composer_example(self, weight: float = 1.) -> RePlugExample:
+        composer_example = deepcopy(self.examples[0])
+        composer_pattern = '# {fn_repo}\n\n{cont_repo}\n\n#'
+        sorted_examples = sorted(self.examples, key=lambda x: x.context_weight)
+        composer_example.prefix = ''
+        for example in sorted_examples:
+            composer_example.prefix += composer_pattern.format(
+                fn_repo=example.context_file.filename,
+                cont_repo=example.context_file.content
+            )
+        composer_example.prefix += f'# {self.examples[0].completion_file.filename}\n{self.examples[0].file_prefix}'
+        composer_example.context_file = FileStorage('PATH DISTANCE COMPOSER', 'PATH DISTANCE COMPOSER')
+        composer_example.context_weight = weight
+        return composer_example
+
     def write_file_level(self):
         self.file_level_example = self.get_file_level_example()
     
@@ -231,12 +246,13 @@ if __name__ == '__main__':
     # print(raw_dp)
     for example_batch in example_batches:
         example_batch.calculate_path_distances_weights()
-        example_batch = example_batch.get_top_k_contexts(3)
-        print(example_batch.examples[0].completion_file.filename)
-        for example in example_batch:
-            print(example.context_weight)
-            print(example.context_file.filename)
-        break
+        example_batch.get_composer_example()
+        # example_batch = example_batch.get_top_k_contexts(3)
+        # print(example_batch.examples[0].completion_file.filename)
+        # for example in example_batch:
+        #     print(example.context_weight)
+        #     print(example.context_file.filename)
+        # break
         # for example in example_batch:
         #     print('='*100)
         #     print(example.prefix[:1_000] + '\n\n...\n\n', example.prefix[-1_000:])

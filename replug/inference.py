@@ -41,6 +41,9 @@ def main(print_generated: bool = False,
     if top_k_selection == 'file_level':
         top_k = 1
         prob_similarity_weights = False
+    elif top_k_selection == 'composer':
+        top_k = 1
+        prob_similarity_weights = False
     init_wandb(model_name, top_k, max_new_tokens,
                prob_similarity_weights, top_k_selection)
     device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
@@ -69,13 +72,15 @@ def main(print_generated: bool = False,
             instance.calculate_path_distances_weights()
         elif top_k_selection == 'file_level':
             instance.examples = [instance.get_file_level_example(weight=1.)]
+        elif top_k_selection == 'composer':
+            instance.examples = [instance.get_composer_example(weight=1.)]
         else:
             raise NotImplementedError(f'Top k selection {top_k_selection} not implemented')
         instance = instance.get_top_k_contexts(top_k)
         generated, num_input_tokens = model.generate(instance,
                                                      max_new_tokens=max_new_tokens,
                                                      prob_similarity_weights=prob_similarity_weights,
-                                                     max_length=12_000  # TODO: discuss that choice
+                                                     max_length=16_000  # TODO: discuss that choice
                                                      )
         total += 1
         total_input_tokens += num_input_tokens
