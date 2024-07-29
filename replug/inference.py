@@ -9,19 +9,9 @@ from data_loading import get_examples_from_raw_datapoint, get_all_raw_data_point
 from model import RePlugModel
 
 
-def init_wandb(model_name: str,
-               top_k: int,
-               max_new_tokens: int,
-               prob_similarity_weights: bool,
-               top_k_selection: str):
+def init_wandb(**kwargs):
     wandb.init(project='fast-iterations-replug')
-    wandb.config.update({
-        'model_name': model_name,
-        'top_k': top_k,
-        'max_new_tokens': max_new_tokens,
-        'prob_similarity_weights': prob_similarity_weights,
-        'top_k_selection': top_k_selection
-    })
+    wandb.config.update(kwargs)
 
 
 @click.command()
@@ -33,6 +23,7 @@ def init_wandb(model_name: str,
 @click.option('--top-k-selection', type=str, default='path_distances')
 @click.option('--model-name', type=str, default='deepseek-ai/deepseek-coder-1.3b-base')
 @click.option('--emb-model-name', type=str, default='thenlper/gte-large')
+@click.option('--line-cat', type=str, default='inproject')
 def main(print_generated: bool = False,
          top_k: int = 3,
          max_new_tokens: int = 25,
@@ -40,7 +31,9 @@ def main(print_generated: bool = False,
          prob_similarity_weights: bool = False,
          top_k_selection: str = 'path_distances',
          model_name: str = 'deepseek-ai/deepseek-coder-1.3b-base',
-         emb_model_name: str = 'thenlper/gte-large'):
+         emb_model_name: str = 'thenlper/gte-large',
+         line_cat: str = 'inproject',
+         max_length: int = 16_000):
     device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
 
     if top_k_selection == 'file_level':
@@ -56,7 +49,8 @@ def main(print_generated: bool = False,
         emb_model = AutoModel.from_pretrained(emb_model_name).to(device)
 
     init_wandb(model_name, top_k, max_new_tokens,
-               prob_similarity_weights, top_k_selection)
+               prob_similarity_weights, top_k_selection,
+               line_cat, max_length)
     model = RePlugModel(model_name, device)
 
     ds = load_dataset('JetBrains-Research/lca-project-level-code-completion',
@@ -68,7 +62,7 @@ def main(print_generated: bool = False,
     instances = []
 
     for raw_dp in tqdm(all_raw_data_points, desc='Processing raw data points'):
-        curr_instances = get_examples_from_raw_datapoint(raw_dp, line_cat_to_get='inproject')
+        curr_instances = get_examples_from_raw_datapoint(raw_dp, line_cat_to_get=line_cat)
         instances.extend(curr_instances)
 
     print(f'Total {len(instances)} instances')
@@ -94,7 +88,7 @@ def main(print_generated: bool = False,
         generated, num_input_tokens = model.generate(instance,
                                                      max_new_tokens=max_new_tokens,
                                                      prob_similarity_weights=prob_similarity_weights,
-                                                     max_length=16_000  # TODO: discuss that choice
+                                                     max_length=max_length  # TODO: discuss that choice
                                                      )
         total += 1
         total_input_tokens += num_input_tokens
