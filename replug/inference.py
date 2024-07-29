@@ -62,6 +62,7 @@ def main(print_generated: bool = False,
 
     pbar = tqdm(instances, desc='Progress')
     total = 0
+    total_input_tokens = 0
     correct = 0
     for instance in pbar:
         if top_k_selection == 'path_distances':
@@ -71,10 +72,13 @@ def main(print_generated: bool = False,
         else:
             raise NotImplementedError(f'Top k selection {top_k_selection} not implemented')
         instance = instance.get_top_k_contexts(top_k)
-        generated = model.generate(instance,
-                                   max_new_tokens=max_new_tokens,
-                                   prob_similarity_weights=prob_similarity_weights)
+        generated, num_input_tokens = model.generate(instance,
+                                                     max_new_tokens=max_new_tokens,
+                                                     prob_similarity_weights=prob_similarity_weights,
+                                                     max_length=12_000  # TODO: discuss that choice
+                                                     )
         total += 1
+        total_input_tokens += num_input_tokens
         generated = generated.strip()
         assert not '\n' in generated, f'Generated contains multiple lines: {repr(generated)}'
         ground_truth = instance.ground_truth.strip()
@@ -86,7 +90,9 @@ def main(print_generated: bool = False,
         wandb.log({
             'EM': correct / total,
             'total': total,
-            'correct': correct
+            'correct': correct,
+            'average context tokens per example': total_input_tokens / (top_k * total),
+            'total context tokens seen': total_input_tokens
         })
 
         if print_generated:

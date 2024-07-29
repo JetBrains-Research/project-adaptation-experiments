@@ -15,6 +15,7 @@ class RePlugModel(nn.Module):
                                                                device_map=device)
         self.base_model.eval()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.tokenizer.truncation_side = 'left'
         self.device = torch.device(device)
 
     @torch.inference_mode()
@@ -24,17 +25,23 @@ class RePlugModel(nn.Module):
                  max_length: int = 16000,
                  verbose: bool = False,
                  prob_similarity_weights: bool = False,
-                 ) -> str:
+                 ) -> (str, int):
         past_kvs = [None] * (len(input_instance) + int(prob_similarity_weights))
         current_input_ids = []
+        number_of_context_tokens: int = 0
 
         if prob_similarity_weights:
             input_instance.write_file_level()  # Save file-level context example
+
+        file_prefix_num_tokens = self.tokenizer(input_instance.examples[0].file_prefix, return_tensors='pt',
+                                     max_length=max_length)['input_ids'].shape[-1]
 
         for is_project_ctxt, sample in input_instance:
             inputs = self.tokenizer(sample.prefix, return_tensors='pt',
                                      max_length=max_length)
             input_ids = inputs['input_ids'].to(self.device)
+            # print(input_ids.shape)
+            number_of_context_tokens += (input_ids.shape[-1] - file_prefix_num_tokens) * is_project_ctxt
             current_input_ids.append((is_project_ctxt, input_ids))
 
         generated = []
@@ -67,7 +74,7 @@ class RePlugModel(nn.Module):
             if self.stopping_criterion(generated):
                 break
         generated_text = self.tokenizer.decode(generated)
-        return generated_text
+        return generated_text, number_of_context_tokens
 
     def stopping_criterion(self, generated_tokens: list[int]) -> bool:
         # skip intro new lines
