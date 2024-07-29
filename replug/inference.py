@@ -9,9 +9,19 @@ from data_loading import get_examples_from_raw_datapoint, get_all_raw_data_point
 from model import RePlugModel
 
 
-def init_wandb(**kwargs):
+def init_wandb(model_name, top_k, max_new_tokens,
+               prob_similarity_weights, top_k_selection,
+               line_cat, max_length):
     wandb.init(project='fast-iterations-replug')
-    wandb.config.update(kwargs)
+    wandb.config.update({
+        'model_name': model_name,
+        'top_k': top_k,
+        'max_new_tokens': max_new_tokens,
+        'prob_similarity_weights': prob_similarity_weights,
+        'top_k_selection': top_k_selection,
+        'line_cat': line_cat,
+        'max_length': max_length
+    })
 
 
 @click.command()
