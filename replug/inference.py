@@ -1,6 +1,7 @@
 import click
 from datasets import load_dataset
 import torch
+from transformers import AutoTokenizer, AutoModel
 from tqdm import tqdm
 import wandb
 
@@ -31,22 +32,31 @@ def init_wandb(model_name: str,
 @click.option('--prob-similarity-weights', type=bool, default=False)
 @click.option('--top-k-selection', type=str, default='path_distances')
 @click.option('--model-name', type=str, default='deepseek-ai/deepseek-coder-1.3b-base')
+@click.option('--emb-model-name', type=str, default='thenlper/gte-large')
 def main(print_generated: bool = False,
          top_k: int = 3,
          max_new_tokens: int = 25,
          device_num: int = 0,
          prob_similarity_weights: bool = False,
          top_k_selection: str = 'path_distances',
-         model_name: str = 'deepseek-ai/deepseek-coder-1.3b-base'):
+         model_name: str = 'deepseek-ai/deepseek-coder-1.3b-base',
+         emb_model_name: str = 'thenlper/gte-large'):
+    device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
+
     if top_k_selection == 'file_level':
         top_k = 1
         prob_similarity_weights = False
     elif top_k_selection == 'composer':
         top_k = 1
         prob_similarity_weights = False
+    elif top_k_selection == 'emb_sim':
+        prob_similarity_weights = False
+        tokenizer = AutoTokenizer.from_pretrained(emb_model_name)
+        tokenizer.truncation_side = 'left'
+        emb_model = AutoModel.from_pretrained(emb_model_name).to(device)
+
     init_wandb(model_name, top_k, max_new_tokens,
                prob_similarity_weights, top_k_selection)
-    device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
     model = RePlugModel(model_name, device)
 
     ds = load_dataset('JetBrains-Research/lca-project-level-code-completion',
@@ -74,9 +84,13 @@ def main(print_generated: bool = False,
             instance.examples = [instance.get_file_level_example(weight=1.)]
         elif top_k_selection == 'composer':
             instance.examples = [instance.get_composer_example(weight=1.)]
+        elif top_k_selection == 'emb_sim':
+            instance.calculate_embedding_weights(emb_model, tokenizer)
         else:
             raise NotImplementedError(f'Top k selection {top_k_selection} not implemented')
         instance = instance.get_top_k_contexts(top_k)
+        if top_k_selection == 'emb_sim':
+            instance.softmax_context_weights(0.025)
         generated, num_input_tokens = model.generate(instance,
                                                      max_new_tokens=max_new_tokens,
                                                      prob_similarity_weights=prob_similarity_weights,
