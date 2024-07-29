@@ -290,6 +290,8 @@ if __name__ == '__main__':
     # print(examples)
     # print(raw_dp)
     device = torch.device('cuda:1')
+    model = AutoModel.from_pretrained('thenlper/gte-large').to(device)
+    tokenizer = AutoTokenizer.from_pretrained('thenlper/gte-large')
     for example_batch in example_batches:
         example_batch.calculate_embedding_weights(model, tokenizer)
         example_batch = example_batch.get_top_k_contexts(8)
