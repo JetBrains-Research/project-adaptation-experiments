@@ -1,12 +1,10 @@
 from score_context_composer import KLScoreComposer
 
-
 from omegaconf import OmegaConf
 
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
-from kotlineval.data.plcc.plcc_dataset import get_context_composer
 
 
 def run_eval_plcc(eval_config_path: str, verbose: bool = False, limit: int = -1) -> None:
@@ -32,4 +30,4 @@ def run_eval_plcc(eval_config_path: str, verbose: bool = False, limit: int = -1)
 
 if __name__ == '__main__':
     eval_config_path = "config_plcc.yaml"
-    run_eval_plcc(eval_config_path, verbose=True, limit= 10)
+    run_eval_plcc(eval_config_path, verbose=True, limit= -1)
