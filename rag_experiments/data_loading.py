@@ -9,6 +9,36 @@ class FileStorage:
     filename: str
     content: str
 
+    @property
+    def prompt(self) -> str:
+        return f'# {self.filename}\n{self.content}\n\n'
+
+
+@dataclass
+class SplittedFile:
+    filename: str
+    prefix: str
+    ground_truth: str
+    postfix: str
+    line_type: str | None = None
+
+    @classmethod
+    def from_completion_file(cls, completion_file: FileStorage, completion_line_num: int, line_type: str | None = None):
+        completion_lines = completion_file.content.split('\n')
+        prefix = '\n'.join(completion_lines[:completion_line_num])
+        ground_truth = completion_lines[completion_line_num]
+        postfix = '\n'.join(completion_lines[completion_line_num + 1:])
+        return cls(filename=completion_file.filename,
+                   prefix=prefix,
+                   ground_truth=ground_truth,
+                   postfix=postfix,
+                   line_type=line_type)
+
+    @property
+    def prompt(self) -> str:
+        return f'# {self.filename}\n{self.prefix}'
+
+
 @dataclass
 class RepoStorage:
     filename: list[str]
@@ -38,6 +68,10 @@ class Chunk:
         num_lines = len(self.content.split("\n"))
         return (f'Chunk {self.chunk_idx} out of {self.max_chunks} of file {self.filename}, '
                 f'Len: {len(self.content)}C/{num_lines}L, Score: {self.score:.4f}')
+
+    @property
+    def prompt(self) -> str:
+        return f'# CHUNK {self.filename}\n{self.content}\n\n'
 
 
 @dataclass
@@ -115,7 +149,7 @@ def chunk_py_file_content(file_st: FileStorage, chunk_lines_size: int = 32, over
     return ChunkedFile(file_st.filename, chunks)
 
 
-def chunk_repository(repo_snapshot: RepoStorage, **chunking_kwargs):
+def chunk_repository(repo_snapshot: RepoStorage, **chunking_kwargs) -> ChunkedRepo:
     chunked_repo = ChunkedRepo()
     for file_st in repo_snapshot:
         if len(file_st.content.strip()) > 1:

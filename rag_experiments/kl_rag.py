@@ -3,7 +3,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from rag_experiments.data_loading import FileStorage, ChunkedRepo, get_file_and_repo, chunk_repository
+from rag_experiments.data_loading import FileStorage, ChunkedRepo, get_file_and_repo, chunk_repository, SplittedFile
 
 
 class KLScorer:
@@ -48,13 +48,13 @@ class KLScorer:
         return token_ids
 
     @torch.inference_mode()
-    def score_repo(self, completion_file: FileStorage, chunked_repo: ChunkedRepo,
+    def score_repo(self, completion_file: FileStorage | SplittedFile, chunked_repo: ChunkedRepo,
                    completion_file_truncate_lines: int = -1) -> list[float]:
         scores = list()
         if completion_file_truncate_lines < 1:
-            completion_ids = self.get_token_ids(completion_file.content)
+            completion_ids = self.get_token_ids(completion_file.prompt)
         else:
-            completion_lines = completion_file.content.split('\n')
+            completion_lines = completion_file.prompt.split('\n')
             truncated_completion = '\n'.join(completion_lines[:completion_file_truncate_lines])
             completion_ids = self.get_token_ids(truncated_completion)
         file_level_logits = self.get_file_level_logits(completion_ids)
@@ -70,7 +70,12 @@ class KLScorer:
 
 def main():
     ds = load_dataset('JetBrains-Research/lca-project-level-code-completion', 'medium_context', split='test')
-    completion_file, repo_snapshot = get_file_and_repo(ds[0])
+    dp = ds[0]
+    completion_file, repo_snapshot = get_file_and_repo(dp)
+    completion_lines = dp['completion_lines']
+    line_type = 'inproject'
+    # line_type = 'infile'
+    splitted_file = SplittedFile.from_completion_file(completion_file, completion_lines[line_type][0], line_type)
     chunk_kwargs = {'chunk_lines_size': 100, 'overlap_lines_size': 8}
     chunked_repo = chunk_repository(repo_snapshot, **chunk_kwargs)
     device_num = 1
@@ -79,8 +84,10 @@ def main():
         model_name='deepseek-ai/deepseek-coder-1.3b-base',
         device=device
     )
-    scores = scorer.score_repo(completion_file, chunked_repo, completion_file_truncate_lines=100)
+    scores = scorer.score_repo(splitted_file, chunked_repo, completion_file_truncate_lines=100)
     chunked_repo.set_scores(scores)
+    print('>>', splitted_file.filename)
+    print()
     for idx, chunk in enumerate(chunked_repo.top_k(10)):
         if idx > 250:
             print('-' * 100)
