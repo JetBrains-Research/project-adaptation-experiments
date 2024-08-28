@@ -1,5 +1,6 @@
 import torch
 from datasets import load_dataset
+from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from rag_experiments.data_loading import FileStorage, ChunkedRepo, get_file_and_repo, chunk_repository
@@ -58,7 +59,7 @@ class KLScorer:
             completion_ids = self.get_token_ids(truncated_completion)
         file_level_logits = self.get_file_level_logits(completion_ids)
         file_level_logprobs = self._convert_to_logprobs(file_level_logits)
-        for chunk in chunked_repo:
+        for chunk in tqdm(chunked_repo):
             chunk_ids = self.get_token_ids(chunk.content)
             chunk_logits = self.get_chunk_logits(chunk_ids, completion_ids)
             chunk_logprobs = self._convert_to_logprobs(chunk_logits)
