@@ -83,6 +83,13 @@ class ChunkedRepo:
         for score, chunk in zip(scores, self.chunks):
             chunk.score = score
 
+    def top_k(self, k: int = 10) -> 'ChunkedRepo':
+        chunks = self.chunks
+        scores = [chunk.score for chunk in self.chunks]
+        combined = zip(scores, chunks)
+        sorted_combined = sorted(combined, reverse=True)
+        sorted_chunks = [chunk for _, chunk in sorted_combined]
+        return ChunkedRepo(sorted_chunks[:k])
 
 def get_file_and_repo(dp) -> tuple[FileStorage, RepoStorage]:
     hf_repo_filename = dp.pop('repo_snapshot_filename', None)

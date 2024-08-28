@@ -80,7 +80,7 @@ def main():
     )
     scores = scorer.score_repo(completion_file, chunked_repo, completion_file_truncate_lines=100)
     chunked_repo.set_scores(scores)
-    for idx, chunk in enumerate(chunked_repo):
+    for idx, chunk in enumerate(chunked_repo.top_k(10)):
         if idx > 250:
             print('-' * 100)
             break
