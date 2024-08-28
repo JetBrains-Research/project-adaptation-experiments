@@ -71,7 +71,7 @@ class Chunk:
 
     @property
     def prompt(self) -> str:
-        return f'# CHUNK {self.filename}\n{self.content}\n\n'
+        return f'# CHUNK {self.filename} SCORE {self.score:.2f}\n{self.content}\n\n'
 
 
 @dataclass
@@ -119,10 +119,7 @@ class ChunkedRepo:
 
     def top_k(self, k: int = 10) -> 'ChunkedRepo':
         chunks = self.chunks
-        scores = [chunk.score for chunk in self.chunks]
-        combined = zip(scores, chunks)
-        sorted_combined = sorted(combined, reverse=True)
-        sorted_chunks = [chunk for _, chunk in sorted_combined]
+        sorted_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
         return ChunkedRepo(sorted_chunks[:k])
 
 def get_file_and_repo(dp) -> tuple[FileStorage, RepoStorage]:
