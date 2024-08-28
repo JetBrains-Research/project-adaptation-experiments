@@ -4,6 +4,10 @@ from copy import deepcopy
 from dataclasses import dataclass, asdict
 
 from datasets import load_dataset, Dataset
+from transformers import (AutoTokenizer, AutoModel,
+                          PreTrainedTokenizer, PreTrainedModel)
+import torch
+from torch import Tensor
 
 
 @dataclass
@@ -79,7 +83,6 @@ class RePlugInstance:
         for ex in self.examples:
             yield True, ex
 
-
     @property
     def context_weights(self):
         return [example.context_weight for example in self.examples]
@@ -131,10 +134,53 @@ class RePlugInstance:
             pd = path_distance(example.context_file.filename, example.completion_file.filename)
             example.context_weight = 1 / pd
 
+    @torch.inference_mode()
+    def calculate_embedding_weights(self,
+                                    model: PreTrainedModel,
+                                    tokenizer: PreTrainedTokenizer,
+                                    ) -> None:
+        # bigcode/starencoder - https://huggingface.co/bigcode/starencoder
+        # codesage/codesage-large - https://huggingface.co/codesage/codesage-large
+        # thenlper/gte-large - https://huggingface.co/thenlper/gte-large
+
+        if model.config._name_or_path == 'bigcode/starencoder':
+            raise NotImplementedError
+        elif model.config._name_or_path == 'codesage/codesage-large':
+            raise NotImplementedError
+        elif model.config._name_or_path == 'thenlper/gte-large':
+            input_texts = [example.context_file.content for example in self.examples]
+            input_texts = [self.examples[0].file_prefix] + input_texts
+
+            batch_dict = tokenizer(input_texts, max_length=512, padding=True,
+                                   truncation=True, return_tensors='pt').to(model.device)
+            outputs = model(**batch_dict)
+            embeddings = self._average_pool(outputs.last_hidden_state, batch_dict['attention_mask'])
+            comp_file_emb  = embeddings[0:1]
+            context_file_embs = embeddings[1:]
+            weights = torch.cosine_similarity(comp_file_emb, context_file_embs) + 1
+            for example, weight in zip(self.examples, weights):
+                example.context_weight = weight.item()
+        return weights
+
     def normalize_context_weights(self):
         weight_sum = sum([example.context_weight for example in self.examples])
         for example in self.examples:
             example.context_weight /= weight_sum
+
+    def _average_pool(self,
+                      last_hidden_states: Tensor,
+                      attention_mask: Tensor) -> Tensor:
+        last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
+        return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
+    
+    def softmax_context_weights(self, temperature: float = 0.025):
+        ws = torch.tensor(self.context_weights)
+        ws = ws / temperature
+        ws = torch.softmax(ws, 0)
+        for example, weight in zip(self.examples, ws):
+            example.context_weight = weight.item()
+        return ws
+
 
 
 
@@ -244,9 +290,19 @@ if __name__ == '__main__':
     example_batches = get_examples_from_raw_datapoint(raw_dp)
     # print(examples)
     # print(raw_dp)
+    device = torch.device('cuda:1')
+    model = AutoModel.from_pretrained('thenlper/gte-large').to(device)
+    tokenizer = AutoTokenizer.from_pretrained('thenlper/gte-large')
     for example_batch in example_batches:
-        example_batch.calculate_path_distances_weights()
-        example_batch.get_composer_example()
+        example_batch.calculate_embedding_weights(model, tokenizer)
+        example_batch = example_batch.get_top_k_contexts(8)
+        print(example_batch.context_weights)
+        ws = torch.tensor(example_batch.context_weights)
+        ws = ws / 0.025
+        print(sorted(torch.softmax(ws, 0)))
+        break
+        # example_batch.calculate_path_distances_weights()
+        # example_batch.get_composer_example()
         # example_batch = example_batch.get_top_k_contexts(3)
         # print(example_batch.examples[0].completion_file.filename)
         # for example in example_batch:
