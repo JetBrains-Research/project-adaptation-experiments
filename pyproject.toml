@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "project-adaptation-experiments"
+version = "0.1.0"
+description = "Benchmark for models that write a code for drawing a plot"
+authors = ["Timur Galimzyanov <timur.galimzyanov@jetbrains.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+kotlineval = {version = "^0.1.1", source = "space-kotlin-eval"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "space-kotlin-eval"
+url = "https://packages.jetbrains.team/pypi/p/ml-4-se-lab/kotlin-eval/simple"
+priority = "explicit"
