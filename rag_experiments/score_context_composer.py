@@ -28,6 +28,7 @@ class ChunkScoreComposer(BaseContextComposer):
         self.score_model_name = rag_config.model
         self.scorer = scorer
         self.top_k = rag_config.top_k
+        self.compl_file_trunc_lines = rag_config.completion_file_truncate_lines
 
     @staticmethod
     def merge_context_chunks(context_chunks: ChunkedRepo) -> str:
@@ -45,7 +46,7 @@ class ChunkScoreComposer(BaseContextComposer):
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
         chunked_repo = chunk_repository(repo_snapshot, **self.chunk_kwargs)
         scores = self.scorer.score_repo(
-            completion_file, chunked_repo, completion_file_truncate_lines=100
+            completion_file, chunked_repo, completion_file_truncate_lines=self.compl_file_trunc_lines
         )
         chunked_repo.set_scores(scores)
         chunked_repo = chunked_repo.top_k(self.top_k)

@@ -1,5 +1,5 @@
 model: "deepseek-ai/deepseek-coder-1.3b-base"
-chunk_lines_size: 50
-overlap_lines_size: 0
+chunk_lines_size: 64
+overlap_lines_size: 8
 completion_file_truncate_lines: 100
 top_k: 10
