@@ -1,4 +1,4 @@
 kl_model: "deepseek-ai/deepseek-coder-1.3b-base"
-chunk_lines_size: 100
-overlap_lines_size: 8
-top_k: 10
+chunk_lines_size: 50
+overlap_lines_size: 0
+top_k: 1
