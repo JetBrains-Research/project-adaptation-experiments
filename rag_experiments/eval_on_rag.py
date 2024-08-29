@@ -1,18 +1,25 @@
-from score_context_composer import KLScoreComposer
-
 from omegaconf import OmegaConf
+import torch
 
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
 from kotlineval.data.plcc.plcc_dataset import get_context_composer
 
+from kl_rag import KLScorer
+from score_context_composer import ChunkScoreComposer
+
 
 def run_eval_plcc(eval_config_path: str, verbose: bool = False, limit: int = -1) -> None:
 
     config_eval = OmegaConf.load(eval_config_path)
-    kl_composer = KLScoreComposer(lang_extensions=[".py"], kl_config_path="rag_config.yaml")
-    context_composer = kl_composer
+    config_rag = OmegaConf.load("rag_config.yaml")
+
+    device_num = 1
+    device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
+    kl_scorer = KLScorer(model_name=config_rag.model, device=device)
+
+    context_composer = ChunkScoreComposer(lang_extensions=[".py"], rag_config=config_rag, scorer = kl_scorer)
     # context_composer = get_context_composer(config_eval.data)
 
     dataloader = get_dataloader(config_eval, context_composer)
@@ -33,4 +40,4 @@ def run_eval_plcc(eval_config_path: str, verbose: bool = False, limit: int = -1)
 
 if __name__ == '__main__':
     eval_config_path = "config_plcc.yaml"
-    run_eval_plcc(eval_config_path, verbose=True, limit= 3)
+    run_eval_plcc(eval_config_path, verbose=True, limit= 2)

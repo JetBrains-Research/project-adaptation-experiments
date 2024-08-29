@@ -1,38 +1,33 @@
-import torch
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 
 from data_loading import get_file_and_repo, chunk_repository, ChunkedRepo
-from kl_rag import KLScorer
 
 
 # TODO add others context composers
-class KLScoreComposer(BaseContextComposer):
+class ChunkScoreComposer(BaseContextComposer):
     def __init__(
         self,
         lang_extensions: list[str],
-        kl_config_path: str,
+        rag_config: DictConfig,
+        scorer,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt"],
         completion_categories: list[str] = ["infile", "inproject"],
     ):
-        super(KLScoreComposer, self).__init__(
+        super(ChunkScoreComposer, self).__init__(
             lang_extensions=lang_extensions,
             filter_extensions=filter_extensions,
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,
         )
-        config = OmegaConf.load(kl_config_path)
         self.chunk_kwargs = {
-            "chunk_lines_size": config.chunk_lines_size,
-            "overlap_lines_size": config.overlap_lines_size,
+            "chunk_lines_size": rag_config.chunk_lines_size,
+            "overlap_lines_size": rag_config.overlap_lines_size,
         }
-        self.kl_model_name = config.kl_model
-        # TODO make it better
-        device_num = 1
-        device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
-        self.scorer = KLScorer(model_name=self.kl_model_name, device=device)
-        self.top_k = config.top_k
+        self.score_model_name = rag_config.model
+        self.scorer = scorer
+        self.top_k = rag_config.top_k
 
     @staticmethod
     def merge_context_chunks(context_chunks: ChunkedRepo) -> str:

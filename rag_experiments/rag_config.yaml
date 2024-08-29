@@ -1,4 +1,4 @@
-kl_model: "deepseek-ai/deepseek-coder-1.3b-base"
+model: "deepseek-ai/deepseek-coder-1.3b-base"
 chunk_lines_size: 50
 overlap_lines_size: 0
 completion_file_truncate_lines: 100
