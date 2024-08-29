@@ -59,14 +59,15 @@ class RepoStorage:
         repo_dict = {filename: content for filename, content in zip(self.filename, self.content)}
         return repo_dict
 
-    def filter_by_extensions(self, allowed_extensions):
-        repo_dict = self.get_dict()
-        self.filename = [
-            file
-            for file in self.filename
-            if any(file.endswith(ext) for ext in allowed_extensions)
-        ]
-        self.content = [repo_dict[file] for file in self.filename]
+    def filter_by_extensions(self, allowed_extensions: list[str] | None = None):
+        if allowed_extensions is not None:
+            repo_dict = self.get_dict()
+            self.filename = [
+                file
+                for file in self.filename
+                if any(file.endswith(ext) for ext in allowed_extensions)
+            ]
+            self.content = [repo_dict[file] for file in self.filename]
 
 
 @dataclass
@@ -163,10 +164,8 @@ def chunk_repository(repo_snapshot: RepoStorage, **chunking_kwargs) -> ChunkedRe
     chunked_repo = ChunkedRepo()
     for file_st in repo_snapshot:
         if len(file_st.content.strip()) > 1:
-            if file_st.filename.endswith('.py'):
-                chunked_file = chunk_py_file_content(file_st, **chunking_kwargs)
-                chunked_repo.append(chunked_file)
-                # chunked_repo[file_st.filename] = chunks
+            chunked_file = chunk_py_file_content(file_st, **chunking_kwargs)
+            chunked_repo.append(chunked_file)
     return chunked_repo
 
 
