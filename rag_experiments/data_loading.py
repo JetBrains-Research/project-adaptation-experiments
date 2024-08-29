@@ -147,11 +147,12 @@ def get_file_and_repo(dp) -> tuple[FileStorage, RepoStorage]:
     return completion_file, repo_snapshot
 
 
-def chunk_py_file_content(file_st: FileStorage, chunk_lines_size: int = 32, overlap_lines_size: int = 8) -> ChunkedFile:
+def chunk_py_file_content(file_st: FileStorage, chunk_lines_size: int = 32, overlap_lines_size: int = 8, filter_striped: bool = False) -> ChunkedFile:
     if chunk_lines_size <= overlap_lines_size:
         raise ValueError('chunk_lines_size must be greater than overlap_lines_size')
     lines = file_st.content.split('\n')
-    # TODO: filter out lines with whitespace chars (spaces, tabs)
+    if filter_striped:
+        lines = [line for line in lines if line.strip()]
     chunks = list()
     while len(lines) > chunk_lines_size:
         chunks.append('\n'.join(lines[:chunk_lines_size]))
