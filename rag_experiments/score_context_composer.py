@@ -39,9 +39,8 @@ class ChunkScoreComposer(BaseContextComposer):
         # Reversing the order, so the most relevant chunks would be close to completion file.
         return "\n".join(context_lines[::-1])
 
-    def score_by_kl(self, datapoint: dict):
+    def score_chunks(self, datapoint: dict):
 
-        # TODO add file extension filter
         completion_file, repo_snapshot = get_file_and_repo(datapoint)
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
         chunked_repo = chunk_repository(repo_snapshot, **self.chunk_kwargs)
@@ -54,7 +53,7 @@ class ChunkScoreComposer(BaseContextComposer):
         return chunked_repo
 
     def context_composer(self, datapoint: dict, line_index: int | None = None) -> str:
-        context_chunks = self.score_by_kl(datapoint)
+        context_chunks = self.score_chunks(datapoint)
         merged_context = self.merge_context_chunks(context_chunks)
 
         return merged_context
@@ -62,11 +61,11 @@ class ChunkScoreComposer(BaseContextComposer):
 
 if __name__ == "main":
 
-    kl_composer = KLScoreComposer(lang_extensions=[".py"], kl_config_path="rag_config.yaml")
+    rag_config = OmegaConf.load("rag_config.yaml")
+    score_composer = ChunkScoreComposer(lang_extensions=[".py"], rag_config=rag_config)
 
     from datasets import load_dataset
     ds = load_dataset('JetBrains-Research/lca-project-level-code-completion', 'medium_context', split='test')
     datapoint = ds[0]
 
-    scored_chunks = kl_composer.context_and_completion_composer(datapoint, line_index=50)
-    pass
+    scored_chunks = score_composer.context_and_completion_composer(datapoint, line_index=50)
