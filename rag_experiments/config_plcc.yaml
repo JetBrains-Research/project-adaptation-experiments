@@ -1,5 +1,5 @@
 output:
-  result_folder: /mnt/data2/galimzyanov/long-contex-eval/output/
+  result_folder: /mnt/data2/galimzyanov/long-contex-eval/output/rag/dev/
   results_filename: "results_dev.jsonl"
 data:
   dataset_name: "JetBrains-Research/lca-project-level-code-completion"
@@ -26,6 +26,7 @@ use_vllm: True
 vllm:
   vllm_args:
     download_dir: /mnt/data2/tmp
+#    gpu_memory_utilization: 0.1
   generation_args:
     temperature: 0.0
     max_tokens: 100
@@ -35,7 +36,7 @@ vllm:
 eval:
   # For VLLM this value can be arbitrary large, since it batches the items inside
   batch_size: 20
-  context_size: 16000
+  context_size: 16256
   # Is not used in the library, but can be used in outer scripts to iterate over the context.
   context_size_list: [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
   max_new_tokens: 128

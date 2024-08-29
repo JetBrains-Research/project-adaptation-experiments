@@ -55,6 +55,19 @@ class RepoStorage:
         for filename, content in zip(self.filename, self.content):
             yield FileStorage(filename, content)
 
+    def get_dict(self):
+        repo_dict = {filename: content for filename, content in zip(self.filename, self.content)}
+        return repo_dict
+
+    def filter_by_extensions(self, allowed_extensions):
+        repo_dict = self.get_dict()
+        self.filename = [
+            file
+            for file in self.filename
+            if any(file.endswith(ext) for ext in allowed_extensions)
+        ]
+        self.content = [repo_dict[file] for file in self.filename]
+
 
 @dataclass
 class Chunk:

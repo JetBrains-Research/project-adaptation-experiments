@@ -48,6 +48,7 @@ class KLScoreComposer(BaseContextComposer):
 
         # TODO add file extension filter
         completion_file, repo_snapshot = get_file_and_repo(datapoint)
+        repo_snapshot.filter_by_extensions(self.allowed_extensions)
         chunked_repo = chunk_repository(repo_snapshot, **self.chunk_kwargs)
         scores = self.scorer.score_repo(
             completion_file, chunked_repo, completion_file_truncate_lines=100

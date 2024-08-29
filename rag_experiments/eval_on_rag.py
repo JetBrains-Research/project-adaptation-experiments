@@ -5,14 +5,17 @@ from omegaconf import OmegaConf
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
+from kotlineval.data.plcc.plcc_dataset import get_context_composer
 
 
 def run_eval_plcc(eval_config_path: str, verbose: bool = False, limit: int = -1) -> None:
 
-    kl_composer = KLScoreComposer(lang_extensions=[".py"], kl_config_path="rag_config.yaml")
     config_eval = OmegaConf.load(eval_config_path)
+    kl_composer = KLScoreComposer(lang_extensions=[".py"], kl_config_path="rag_config.yaml")
+    context_composer = kl_composer
+    # context_composer = get_context_composer(config_eval.data)
 
-    dataloader = get_dataloader(config_eval, kl_composer)
+    dataloader = get_dataloader(config_eval, context_composer)
     generation_engine = VllmEngine(
         config_eval.model.model_name,
         vllm_args=dict(config_eval.vllm.vllm_args),
@@ -30,4 +33,4 @@ def run_eval_plcc(eval_config_path: str, verbose: bool = False, limit: int = -1)
 
 if __name__ == '__main__':
     eval_config_path = "config_plcc.yaml"
-    run_eval_plcc(eval_config_path, verbose=True, limit= -1)
+    run_eval_plcc(eval_config_path, verbose=True, limit= 3)
