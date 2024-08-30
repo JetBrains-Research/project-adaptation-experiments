@@ -1,70 +1,79 @@
-import json
 from dataclasses import asdict
 from typing import Iterator
-import torch
 
 import jsonlines
+import torch
 from datasets import load_dataset
 from tqdm import tqdm
 
-from rag_experiments.data_loading import get_file_and_repo, SplittedFile, chunk_repository, ChunkedRepo
+from rag_experiments.data_loading import (
+    ChunkedRepo,
+    SplittedFile,
+    chunk_repository,
+    get_file_and_repo,
+)
 from rag_experiments.kl_rag import KLScorer
 
 experiments = [
-    'file_level',
-    'kl_rag',
+    "file_level",
+    "kl_rag",
 ]
 
-LINE_TYPES = ['infile', 'inproject']
+LINE_TYPES = ["infile", "inproject"]
 
-kl_rag_chunk_kwargs = {'chunk_lines_size': 64, 'overlap_lines_size': 8}
+kl_rag_chunk_kwargs = {"chunk_lines_size": 64, "overlap_lines_size": 8}
 
 
-ds = load_dataset('JetBrains-Research/lca-project-level-code-completion', 'medium_context', split='test')
-
-device_num = 1
-device = f'cuda:{device_num}' if torch.cuda.is_available() else 'cpu'
-scorer = KLScorer(
-    model_name='deepseek-ai/deepseek-coder-1.3b-base',
-    device=device
+ds = load_dataset(
+    "JetBrains-Research/lca-project-level-code-completion",
+    "medium_context",
+    split="test",
 )
 
+device_num = 1
+device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
+scorer = KLScorer(model_name="deepseek-ai/deepseek-coder-1.3b-base", device=device)
+
+
 def top_k_prompt(splitted_file: SplittedFile, top_k_chunks: ChunkedRepo) -> str:
-    prompt = ''
+    prompt = ""
     for chunk in top_k_chunks:
         prompt = chunk.prompt + prompt
     prompt = prompt + splitted_file.prompt
     return prompt
 
+
 def splitted_file_iterator(ds) -> Iterator[SplittedFile]:
     for dp in ds:
         completion_file, repo_snapshot = get_file_and_repo(dp)
-        completion_lines = dp['completion_lines']
+        completion_lines = dp["completion_lines"]
 
         for line_type in LINE_TYPES:
             for completion_line_num in sorted(completion_lines[line_type]):
-                splitted_file = SplittedFile.from_completion_file(completion_file, completion_line_num, line_type)
+                splitted_file = SplittedFile.from_completion_file(
+                    completion_file, completion_line_num, line_type
+                )
                 yield splitted_file, repo_snapshot
 
 
 def write_file_level(splitted_file: SplittedFile) -> None:
     res_dict = asdict(splitted_file)
-    res_dict['prompt'] = splitted_file.prompt
-    with jsonlines.open('./data/file_level/prompts.jsonl', 'a') as writer:
+    res_dict["prompt"] = splitted_file.prompt
+    with jsonlines.open("./data/file_level/prompts.jsonl", "a") as writer:
         writer.write(res_dict)
 
 
 def write_kl_top_3(prompt: str) -> None:
     res_dict = dict()
-    res_dict['prompt'] = prompt
-    with jsonlines.open('./data/kl_rag/top_3/prompts.jsonl', 'a') as writer:
+    res_dict["prompt"] = prompt
+    with jsonlines.open("./data/kl_rag/top_3/prompts.jsonl", "a") as writer:
         writer.write(res_dict)
 
 
 def write_kl_top_10(prompt: str) -> None:
     res_dict = dict()
-    res_dict['prompt'] = prompt
-    with jsonlines.open('./data/kl_rag/top_10/prompts.jsonl', 'a') as writer:
+    res_dict["prompt"] = prompt
+    with jsonlines.open("./data/kl_rag/top_10/prompts.jsonl", "a") as writer:
         writer.write(res_dict)
 
 

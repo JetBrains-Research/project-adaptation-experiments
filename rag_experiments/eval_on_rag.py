@@ -1,25 +1,25 @@
 import time
-
-from omegaconf import OmegaConf
-import torch
 from pathlib import Path
 
 import jsonlines
 import pandas as pd
-
+import torch
 from kotlineval.data.plcc.data_loader import get_dataloader
+from kotlineval.data.plcc.plcc_dataset import get_context_composer
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
-from kotlineval.data.plcc.plcc_dataset import get_context_composer
+from omegaconf import OmegaConf
 
-from kl_rag import KLScorer
 from iou_chunk_rag import IOUChunkScorer
+from kl_rag import KLScorer
 from score_context_composer import ChunkScoreComposer
 
 
 def ammend_summary(config_eval, config_rag):
 
-    summary_file = Path(config_eval.output.result_folder) / config_eval.output.results_filename
+    summary_file = (
+        Path(config_eval.output.result_folder) / config_eval.output.results_filename
+    )
 
     records = []
     with jsonlines.open(summary_file) as reader:
@@ -29,10 +29,10 @@ def ammend_summary(config_eval, config_rag):
 
     summary = pd.DataFrame(last_record)
     config_rag_dict = OmegaConf.to_container(config_rag)
-    summary["config_rag"] = len(summary)*[config_rag_dict]
+    summary["config_rag"] = len(summary) * [config_rag_dict]
     records[-1] = summary.to_dict()
 
-    with jsonlines.open(summary_file, mode='w') as writer:
+    with jsonlines.open(summary_file, mode="w") as writer:
         writer.write_all(records)
 
 
@@ -52,7 +52,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         result_filename=config_eval.output.results_filename,
     )
 
-    for k in [3,10]:
+    for k in [3, 10]:
 
         print(f"k = {k}")
         config_rag.top_k = k
@@ -62,7 +62,9 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         # kl_scorer = KLScorer(model_name=config_rag.model, device=device)
         iuo_scorer = IOUChunkScorer(model_name=config_rag.model)
 
-        context_composer = ChunkScoreComposer(lang_extensions=[".py"], rag_config=config_rag, scorer = iuo_scorer)
+        context_composer = ChunkScoreComposer(
+            lang_extensions=[".py"], rag_config=config_rag, scorer=iuo_scorer
+        )
         # context_composer = get_context_composer(config_eval.data)
 
         dataloader = get_dataloader(config_eval, context_composer)
@@ -73,7 +75,8 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         print(summary)
         time.sleep(15)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     eval_config_path = "config_plcc.yaml"
     rag_config_path = "rag_config.yaml"
 
