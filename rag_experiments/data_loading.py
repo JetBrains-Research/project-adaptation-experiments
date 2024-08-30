@@ -175,11 +175,14 @@ def chunk_py_file_content(
     lines = file_st.content.split("\n")
     if filter_striped:
         lines = [line for line in lines if line.strip()]
-    chunks = list()
-    while len(lines) > chunk_lines_size:
-        chunks.append("\n".join(lines[:chunk_lines_size]))
-        lines = lines[(chunk_lines_size - overlap_lines_size) :]
-    chunks.append("\n".join(file_st.content.split("\n")[-chunk_lines_size:]))
+    chunks = []
+    total_lines = len(lines)
+    stride = chunk_lines_size - overlap_lines_size
+    for i in range(0, total_lines - chunk_lines_size + 1, stride):
+        chunks.append("\n".join(lines[i:i + chunk_lines_size]))
+    if total_lines % stride != 0:
+        chunks.append("\n".join(lines[-chunk_lines_size:]))
+
     return ChunkedFile(file_st.filename, chunks)
 
 
