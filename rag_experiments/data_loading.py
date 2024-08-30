@@ -170,8 +170,8 @@ def chunk_py_file_content(
     overlap_lines_size: int = 8,
     filter_striped: bool = False,
 ) -> ChunkedFile:
-    if chunk_lines_size <= overlap_lines_size:
-        raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
+    if chunk_lines_size < overlap_lines_size:
+        raise ValueError("chunk_lines_size must be greater or equal than overlap_lines_size")
     lines = file_st.content.split("\n")
     if filter_striped:
         lines = [line for line in lines if line.strip()]
