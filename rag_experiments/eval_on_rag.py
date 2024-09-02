@@ -54,7 +54,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
 
     device_num = 1
     device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
-    kl_scorer = KLScorer(model_name=config_rag.model, device=device)
+    # kl_scorer = KLScorer(model_name=config_rag.model, device=device)
     # iuo_scorer = IOUChunkScorer(model_name=config_rag.model)
 
     context_composer = ChunkScoreComposer(

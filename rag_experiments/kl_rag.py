@@ -1,6 +1,6 @@
 import torch
-from tqdm import tqdm
 from datasets import load_dataset
+from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from data_loading import (

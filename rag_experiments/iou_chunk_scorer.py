@@ -21,6 +21,7 @@ def calculate_iou(list1: list, list2: list) -> float:
 
     return iou
 
+
 class IOUChunkScorer:
     def __init__(self, model_name: str):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
