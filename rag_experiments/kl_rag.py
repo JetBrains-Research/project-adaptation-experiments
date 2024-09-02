@@ -60,15 +60,19 @@ class KLScorer:
     @torch.inference_mode()
     def score_repo(
         self,
-        completion_file: FileStorage | SplittedFile,
+        completion_file: FileStorage | SplittedFile | str,
         chunked_repo: ChunkedRepo,
         completion_file_truncate_lines: int = -1,
     ) -> list[float]:
+        if isinstance(completion_file, str):
+            completion_prompt = completion_file.prompt
+        else:
+            completion_prompt = completion_file.prompt
         scores = list()
         if completion_file_truncate_lines < 1:
-            completion_ids = self.get_token_ids(completion_file.prompt)
+            completion_ids = self.get_token_ids(completion_prompt)
         else:
-            completion_lines = completion_file.prompt.split("\n")
+            completion_lines = completion_prompt.split("\n")
             truncated_completion = "\n".join(
                 completion_lines[:completion_file_truncate_lines]
             )
