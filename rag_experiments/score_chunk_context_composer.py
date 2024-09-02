@@ -64,7 +64,7 @@ class ChunkScoreComposer(BaseContextComposer):
         return merged_context
 
 
-if __name__ == "main":
+if __name__ == "__main__":
 
     rag_config = OmegaConf.load("rag_config.yaml")
     score_composer = ChunkScoreComposer(lang_extensions=[".py"], rag_config=rag_config)

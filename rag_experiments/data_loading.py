@@ -50,10 +50,13 @@ class SplittedFile:
 class RepoStorage:
     filename: list[str]
     content: list[str]
+    score: list[float] | None = None
 
     def __post_init__(self):
         if not len(self.filename) == len(self.content):
             raise ValueError("Filenames and Content must have the same lengths")
+        if self.score is None:
+            self.score = list()
 
     def __len__(self):
         return len(self.filename)
@@ -68,7 +71,7 @@ class RepoStorage:
         }
         return repo_dict
 
-    def filter_by_extensions(self, allowed_extensions: list[str] | None = None):
+    def filter_by_extensions(self, allowed_extensions: list[str] | None = None) -> None:
         if allowed_extensions is not None:
             repo_dict = self.get_dict()
             self.filename = [
@@ -77,6 +80,22 @@ class RepoStorage:
                 if any(file.endswith(ext) for ext in allowed_extensions)
             ]
             self.content = [repo_dict[file] for file in self.filename]
+
+    def sort_by_score(self) -> None:
+        if self.score is not None:
+            combined = list(zip(self.score, self.filename, self.content))
+            combined.sort(reverse=False)
+            self.score, self.filename, self.content = zip(*combined)
+            self.filename = list(self.filename)
+            self.content = list(self.content)
+            self.score = list(self.score)
+
+    def top_k(self, k: int = 10) -> None:
+        self.sort_by_score()
+
+        self.filename = self.filename[-k:]
+        self.content = self.content[-k:]
+        self.score = self.score[-k:]
 
 
 @dataclass

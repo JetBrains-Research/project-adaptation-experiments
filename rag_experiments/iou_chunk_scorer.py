@@ -10,6 +10,17 @@ from data_loading import (
 )
 
 
+def calculate_iou(list1: list, list2: list) -> float:
+    set1 = set(list1)
+    set2 = set(list2)
+
+    intersection = set1.intersection(set2)
+    union = set1.union(set2)
+
+    iou = len(intersection) / len(union)
+
+    return iou
+
 class IOUChunkScorer:
     def __init__(self, model_name: str):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -19,18 +30,6 @@ class IOUChunkScorer:
         text_tokenized = self.tokenizer(text)
         token_ids = text_tokenized["input_ids"]
         return token_ids
-
-    @staticmethod
-    def calculate_iou(list1: list[int], list2: list[int]) -> float:
-        set1 = set(list1)
-        set2 = set(list2)
-
-        intersection = set1.intersection(set2)
-        union = set1.union(set2)
-
-        iou = len(intersection) / len(union)
-
-        return iou
 
     def score_repo(
         self,
@@ -50,7 +49,7 @@ class IOUChunkScorer:
         for chunk in chunked_repo:
             chunk_ids = self.get_token_ids(chunk.content)
             # removing BOS token
-            iou_score = self.calculate_iou(completion_ids[1:], chunk_ids[1:])
+            iou_score = calculate_iou(completion_ids[1:], chunk_ids[1:])
             scores.append(iou_score)
         return scores
 
