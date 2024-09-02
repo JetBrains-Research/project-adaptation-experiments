@@ -11,7 +11,6 @@ class FileScoreComposer(PathDistanceComposer):
         self,
         lang_extensions: list[str],
         rag_config: DictConfig,
-        scorer,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt"],
         completion_categories: list[str] = ["infile", "inproject"],
@@ -26,8 +25,6 @@ class FileScoreComposer(PathDistanceComposer):
             "chunk_lines_size": rag_config.chunk_lines_size,
             "overlap_lines_size": rag_config.overlap_lines_size,
         }
-        self.score_model_name = rag_config.model
-        self.scorer = scorer
         self.top_k = rag_config.top_k
         self.compl_file_trunc_lines = rag_config.completion_file_truncate_lines
 
@@ -47,12 +44,13 @@ class FileScoreComposer(PathDistanceComposer):
 
         return iou_score
 
-    def score_files(self, datapoint: dict):
+    def score_files(self, datapoint: dict, line_index: int):
 
         completion_file, repo_snapshot = get_file_and_repo(datapoint)
+        completion_prefix = self.completion_composer(datapoint, line_index)["prefix"]
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
         scores = [
-            self.calc_iou_between_files(completion_file.content, repo_file)
+            self.calc_iou_between_files(completion_prefix, repo_file)
             for repo_file in repo_snapshot.content
         ]
         repo_snapshot.score = scores
@@ -61,7 +59,7 @@ class FileScoreComposer(PathDistanceComposer):
         return repo_snapshot
 
     def context_composer(self, datapoint: dict, line_index: int | None = None) -> str:
-        repo_snapshot = self.score_files(datapoint)
+        repo_snapshot = self.score_files(datapoint, line_index)
         files_to_merge = {
             filename: content
             for filename, content in zip(repo_snapshot.filename, repo_snapshot.content)
@@ -77,10 +75,7 @@ if __name__ == "__main__":
     from iou_chunk_scorer import IOUChunkScorer
 
     rag_config = OmegaConf.load("rag_config.yaml")
-    iuo_scorer = IOUChunkScorer(model_name="deepseek-ai/deepseek-coder-1.3b-base")
-    score_composer = FileScoreComposer(
-        lang_extensions=[".py"], rag_config=rag_config, scorer=iuo_scorer
-    )
+    score_composer = FileScoreComposer(lang_extensions=[".py"], rag_config=rag_config)
 
     from datasets import load_dataset
 
@@ -94,4 +89,3 @@ if __name__ == "__main__":
     full_context = score_composer.context_and_completion_composer(
         datapoint, line_index=50
     )
-    pass
