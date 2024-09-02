@@ -42,13 +42,14 @@ class ChunkScoreComposer(BaseContextComposer):
         # Reversing the order, so the most relevant chunks would be close to completion file.
         return "\n".join(context_lines[::-1])
 
-    def score_chunks(self, datapoint: dict):
+    def score_chunks(self, datapoint: dict, line_index: int):
 
         completion_file, repo_snapshot = get_file_and_repo(datapoint)
+        completion_prefix = self.completion_composer(datapoint, line_index)["prefix"]
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
         chunked_repo = chunk_repository(repo_snapshot, **self.chunk_kwargs)
         scores = self.scorer.score_repo(
-            completion_file,
+            completion_prefix,
             chunked_repo,
             completion_file_truncate_lines=self.compl_file_trunc_lines,
         )
@@ -58,7 +59,7 @@ class ChunkScoreComposer(BaseContextComposer):
         return chunked_repo
 
     def context_composer(self, datapoint: dict, line_index: int | None = None) -> str:
-        context_chunks = self.score_chunks(datapoint)
+        context_chunks = self.score_chunks(datapoint, line_index)
         merged_context = self.merge_context_chunks(context_chunks)
 
         return merged_context

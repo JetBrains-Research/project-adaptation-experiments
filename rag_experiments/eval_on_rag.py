@@ -13,6 +13,7 @@ from omegaconf import OmegaConf
 from iou_chunk_scorer import IOUChunkScorer
 from kl_rag import KLScorer
 from score_chunk_context_composer import ChunkScoreComposer
+from score_file_context_composer import FileScoreComposer
 
 
 def ammend_summary(config_eval, config_rag):
@@ -52,14 +53,16 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         result_filename=config_eval.output.results_filename,
     )
 
-    device_num = 1
-    device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
+    # device_num = 1
+    # device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
     # kl_scorer = KLScorer(model_name=config_rag.model, device=device)
-    # iuo_scorer = IOUChunkScorer(model_name=config_rag.model)
+    iuo_scorer = IOUChunkScorer(model_name=config_rag.model)
 
     context_composer = ChunkScoreComposer(
-        lang_extensions=[".py"], rag_config=config_rag, scorer=kl_scorer
+        lang_extensions=[".py"], rag_config=config_rag, scorer=iuo_scorer
     )
+    # context_composer = FileScoreComposer(lang_extensions=[".py"], rag_config=config_rag)
+
     for ctx_len in [1024, 2048, 4096, 8192, 16256]:
         config_eval.eval.context_size = ctx_len
         # context_composer = get_context_composer(config_eval.data)

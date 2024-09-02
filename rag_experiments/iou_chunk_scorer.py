@@ -34,15 +34,15 @@ class IOUChunkScorer:
 
     def score_repo(
         self,
-        completion_file: FileStorage | SplittedFile,
+        completion_file: str,
         chunked_repo: ChunkedRepo,
         completion_file_truncate_lines: int = -1,
     ) -> list[float]:
         scores = list()
         if completion_file_truncate_lines < 1:
-            completion_ids = self.get_token_ids(completion_file.prompt)
+            completion_ids = self.get_token_ids(completion_file)
         else:
-            completion_lines = completion_file.prompt.split("\n")
+            completion_lines = completion_file.split("\n")
             truncated_completion = "\n".join(
                 completion_lines[-completion_file_truncate_lines:]
             )
