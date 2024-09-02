@@ -10,7 +10,7 @@ class FileScoreComposer(PathDistanceComposer):
     def __init__(
         self,
         lang_extensions: list[str],
-        rag_config: DictConfig,
+        top_k: int = 100_000,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt"],
         completion_categories: list[str] = ["infile", "inproject"],
@@ -21,12 +21,7 @@ class FileScoreComposer(PathDistanceComposer):
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,
         )
-        self.chunk_kwargs = {
-            "chunk_lines_size": rag_config.chunk_lines_size,
-            "overlap_lines_size": rag_config.overlap_lines_size,
-        }
-        self.top_k = rag_config.top_k
-        self.compl_file_trunc_lines = rag_config.completion_file_truncate_lines
+        self.top_k = top_k
 
     @staticmethod
     def split_by_lines_and_strip(file: str) -> list[str]:
@@ -72,10 +67,8 @@ class FileScoreComposer(PathDistanceComposer):
 
 if __name__ == "__main__":
 
-    from iou_chunk_scorer import IOUChunkScorer
-
     rag_config = OmegaConf.load("rag_config.yaml")
-    score_composer = FileScoreComposer(lang_extensions=[".py"], rag_config=rag_config)
+    score_composer = FileScoreComposer(lang_extensions=[".py"])
 
     from datasets import load_dataset
 
