@@ -53,19 +53,26 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         result_filename=config_eval.output.results_filename,
     )
 
-    # device_num = 1
-    # device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
-    # kl_scorer = KLScorer(model_name=config_rag.model, device=device)
-    iuo_scorer = IOUChunkScorer(model_name=config_rag.model)
+    if config_eval.data.composer_name == "kl_chunk_score":
+        device_num = 1
+        device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
+        scorer = KLScorer(model_name=config_rag.model, device=device)
+        context_composer = ChunkScoreComposer(
+            lang_extensions=[".py"], rag_config=config_rag, scorer=scorer
+        )
+    if config_eval.data.composer_name == "iou_chunk_score":
+        scorer = IOUChunkScorer(model_name=config_rag.model)
+        context_composer = ChunkScoreComposer(
+            lang_extensions=[".py"], rag_config=config_rag, scorer=scorer
+        )
+    if config_eval.data.composer_name == "iou_file_score":
+        context_composer = FileScoreComposer(lang_extensions=[".py"])
 
-    context_composer = ChunkScoreComposer(
-        lang_extensions=[".py"], rag_config=config_rag, scorer=iuo_scorer
-    )
-    # context_composer = FileScoreComposer(lang_extensions=[".py"], rag_config=config_rag)
-
-    for ctx_len in [1024, 2048, 4096, 8192, 16256]:
+    for ctx_len in config_eval.eval.context_size_list:
         config_eval.eval.context_size = ctx_len
-        # context_composer = get_context_composer(config_eval.data)
+
+        if config_eval.data.composer_name == "path_distance":
+            context_composer = get_context_composer(config_eval.data)
 
         dataloader = get_dataloader(config_eval, context_composer)
 
@@ -73,7 +80,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         ammend_summary(config_eval, config_rag)
 
         print(summary)
-        time.sleep(15)
+        time.sleep(5)
 
 
 if __name__ == "__main__":
