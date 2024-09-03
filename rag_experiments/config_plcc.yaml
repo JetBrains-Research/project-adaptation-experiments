@@ -1,9 +1,10 @@
 output:
   result_folder: /mnt/data2/galimzyanov/long-contex-eval/output/rag/dev/
-  results_filename: "results_dev.jsonl"
+  results_filename: "results_path_dist_test_only_py.jsonl"
 data:
   dataset_name: "JetBrains-Research/lca-project-level-code-completion"
   composer_name: "path_distance"
+  # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "kl_chunk_score"]
   # Eligible scopes: ["medium_context", "large_context", "huge_context"]
   # do not use "small_context"
   context_scopes: ["medium_context"]
@@ -35,7 +36,7 @@ vllm:
     stop: ["\n"]
 eval:
   # For VLLM this value can be arbitrary large, since it batches the items inside
-  batch_size: 200
+  batch_size: 400
   context_size: 16256 # 16256
   # Is not used in the library, but can be used in outer scripts to iterate over the context.
   context_size_list: [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
