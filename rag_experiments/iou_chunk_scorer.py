@@ -43,6 +43,7 @@ class IOUChunkScorer:
             completion_ids = self.get_token_ids(completion_file)
         else:
             completion_lines = completion_file.split("\n")
+            completion_lines = [line for line in completion_lines if line.strip()]
             truncated_completion = "\n".join(
                 completion_lines[-completion_file_truncate_lines:]
             )
