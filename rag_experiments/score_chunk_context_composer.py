@@ -54,7 +54,9 @@ class ChunkScoreComposer(BaseContextComposer):
         completion_prefix = self.completion_composer(datapoint, line_index)["prefix"]
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
         if self.chunk_completion_file:
-            repo_snapshot.add_item(filename=completion_file.filename, content=completion_prefix)
+            repo_snapshot.add_item(
+                filename=completion_file.filename, content=completion_prefix
+            )
         chunked_repo = chunk_repository(repo_snapshot, **self.chunk_kwargs)
         if self.chunk_completion_file:
             self.last_chunk = chunked_repo.chunks.pop()
@@ -83,7 +85,9 @@ class ChunkScoreComposer(BaseContextComposer):
 
         project_context = self.context_composer(datapoint, line_index)
         item_completion = self.completion_composer(datapoint, line_index)
-        completion_context = self.last_chunk.filename + "\n\n" + self.last_chunk.content.strip() + "\n"
+        completion_context = (
+            self.last_chunk.filename + "\n\n" + self.last_chunk.content.strip() + "\n"
+        )
         full_context = project_context + "\n\n" + completion_context
         item_completion["full_context"] = full_context
 
@@ -93,9 +97,12 @@ class ChunkScoreComposer(BaseContextComposer):
 if __name__ == "__main__":
 
     from iou_chunk_scorer import IOUChunkScorer
+
     rag_config = OmegaConf.load("rag_config.yaml")
     iou_scorer = IOUChunkScorer(model_name=rag_config.model)
-    score_composer = ChunkScoreComposer(lang_extensions=[".py"], rag_config=rag_config, scorer=iou_scorer)
+    score_composer = ChunkScoreComposer(
+        lang_extensions=[".py"], rag_config=rag_config, scorer=iou_scorer
+    )
 
     from datasets import load_dataset
 
@@ -107,5 +114,7 @@ if __name__ == "__main__":
     datapoint = ds[0]
     line_index = datapoint["completion_lines"]["inproject"][0]
 
-    dp_context = score_composer.context_and_completion_composer(datapoint, line_index=line_index)
+    dp_context = score_composer.context_and_completion_composer(
+        datapoint, line_index=line_index
+    )
     pass

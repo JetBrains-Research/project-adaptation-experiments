@@ -3,7 +3,6 @@ from transformers import AutoTokenizer
 
 from data_loading import (
     ChunkedRepo,
-    FileStorage,
     SplittedFile,
     chunk_repository,
     get_file_and_repo,
