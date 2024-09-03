@@ -65,6 +65,10 @@ class RepoStorage:
         for filename, content in zip(self.filename, self.content):
             yield FileStorage(filename, content)
 
+    def add_item(self, filename: str, content: str):
+        self.filename.append(filename)
+        self.content.append(content)
+
     def get_dict(self):
         repo_dict = {
             filename: content for filename, content in zip(self.filename, self.content)
@@ -197,10 +201,14 @@ def chunk_py_file_content(
     chunks = []
     total_lines = len(lines)
     stride = chunk_lines_size - overlap_lines_size
-    for i in range(0, total_lines - chunk_lines_size + 1, stride):
-        chunks.append("\n".join(lines[i : i + chunk_lines_size]))
+    for i in range(total_lines, chunk_lines_size - 1, -stride):
+        start_idx = max(0, i - chunk_lines_size)
+        chunks.append("\n".join(lines[start_idx:i]))
+    # for i in range(0, total_lines - chunk_lines_size + 1, stride):
+    #     chunks.append("\n".join(lines[i : i + chunk_lines_size]))
     if total_lines % stride != 0:
-        chunks.append("\n".join(lines[-chunk_lines_size:]))
+        chunks.append("\n".join(lines[:chunk_lines_size]))
+    chunks = chunks[::-1]
 
     return ChunkedFile(file_st.filename, chunks)
 
