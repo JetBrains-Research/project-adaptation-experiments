@@ -13,7 +13,7 @@ class ChunkScoreComposer(BaseContextComposer):
         rag_config: DictConfig,
         scorer,
         filter_extensions: bool = True,
-        allowed_extensions: list[str] = [".md", ".txt"],
+        allowed_extensions: list[str] = [".md", ".txt", ".rst"],
         completion_categories: list[str] = ["infile", "inproject"],
     ):
         super(ChunkScoreComposer, self).__init__(

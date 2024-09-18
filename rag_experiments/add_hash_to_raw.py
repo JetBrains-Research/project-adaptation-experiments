@@ -14,23 +14,22 @@ def generate_hash(input_string):
 
 def add_hash(input_file, out_file):
 
+    print("Loading dataset")
     with open(input_file) as f:
         data = pd.read_json(f, orient="records", lines=True)
+    print("Adding hash")
 
-    data["hash"] = data.apply(
-        lambda row: generate_hash(
-            row["ground_truth"]
-            + ", "
-            + row["completion_filename"]
-            + ", "
-            + str(row["completion_line"])
-            + ", "
-            + row["completion_line_type"]
-            + ", "
-            + row["completion_content"]
-        ),
-        axis=1,
+    data["hashing_str"] = (
+        data["ground_truth"]
+        + ", "
+        + data["completion_filename"]
+        + ", "
+        + data["completion_line"].apply(str)
+        + ", "
+        + data["completion_line_type"]
     )
+
+    data["hash"] = data["hashing_str"].apply(generate_hash)
 
     data["avg_cross_entropy"] = -data["avg_cross_entropy"]
     data["perplexity"] = 1 / data["perplexity"]
@@ -56,7 +55,7 @@ output_data_path = Path(
     "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_raw.jsonl"
 )
 
-# add_hash(input_data_path, output_data_path)
+add_hash(input_data_path, output_data_path)
 
 # %%
 

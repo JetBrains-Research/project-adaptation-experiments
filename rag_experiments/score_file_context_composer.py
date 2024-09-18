@@ -1,5 +1,5 @@
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
 from data_loading import get_file_and_repo
 from iou_chunk_scorer import calculate_iou
@@ -12,7 +12,7 @@ class FileScoreComposer(PathDistanceComposer):
         lang_extensions: list[str],
         top_k: int = 100_000,
         filter_extensions: bool = True,
-        allowed_extensions: list[str] = [".md", ".txt"],
+        allowed_extensions: list[str] = [".md", ".txt", ".rst"],
         completion_categories: list[str] = ["infile", "inproject"],
     ):
         super(FileScoreComposer, self).__init__(
@@ -60,6 +60,7 @@ class FileScoreComposer(PathDistanceComposer):
             for filename, content in zip(repo_snapshot.filename, repo_snapshot.content)
             if content
         }
+        # Takes dict[filename, filecontent] as an input
         merged_context = self.merge_context(files_to_merge)
 
         return merged_context

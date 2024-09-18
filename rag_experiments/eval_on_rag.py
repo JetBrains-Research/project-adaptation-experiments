@@ -14,6 +14,7 @@ from iou_chunk_scorer import IOUChunkScorer
 from kl_rag import KLScorer
 from score_chunk_context_composer import ChunkScoreComposer
 from score_file_context_composer import FileScoreComposer
+from from_file_context_composer import FromFileComposer
 
 
 def ammend_summary(config_eval, config_rag):
@@ -40,6 +41,11 @@ def ammend_summary(config_eval, config_rag):
 def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) -> None:
 
     config_eval = OmegaConf.load(eval_config_path)
+    results_filename = Path(config_eval.output.results_filename)
+    results_filename = results_filename.with_stem(
+        results_filename.stem + "_" + config_eval.data.composer_name
+    )
+    config_eval.output.results_filename = results_filename
     config_rag = OmegaConf.load(rag_config_path)
 
     generation_engine = VllmEngine(
@@ -67,6 +73,10 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         )
     if config_eval.data.composer_name == "iou_file_score":
         context_composer = FileScoreComposer(lang_extensions=[".py"])
+    if config_eval.data.composer_name == "from_file":
+        context_composer = FromFileComposer(
+            lang_extensions=[".py"], dataset_path=config_eval.data.composer_dataset_file
+        )
 
     for ctx_len in config_eval.eval.context_size_list:
         print(ctx_len)
