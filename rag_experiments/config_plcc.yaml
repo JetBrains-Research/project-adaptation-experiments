@@ -1,6 +1,6 @@
 output:
   result_folder: /mnt/data2/galimzyanov/long-contex-eval/output/rag/dev/
-  results_filename: "results_path_dist_test_only_py.jsonl"
+  results_filename: "results_path_dist_test_no_sort.jsonl"
 data:
   dataset_name: "JetBrains-Research/lca-project-level-code-completion"
   composer_name: "path_distance"
@@ -39,5 +39,5 @@ eval:
   batch_size: 400
   context_size: 16256 # 16256
   # Is not used in the library, but can be used in outer scripts to iterate over the context.
-  context_size_list: [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
+  context_size_list: [16256]# [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
   max_new_tokens: 128

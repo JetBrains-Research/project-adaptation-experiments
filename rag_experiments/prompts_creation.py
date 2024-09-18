@@ -6,12 +6,8 @@ import torch
 from datasets import load_dataset
 from tqdm import tqdm
 
-from rag_experiments.data_loading import (
-    ChunkedRepo,
-    SplittedFile,
-    chunk_repository,
-    get_file_and_repo,
-)
+from rag_experiments.data_loading import (ChunkedRepo, SplittedFile,
+                                          chunk_repository, get_file_and_repo)
 from rag_experiments.kl_rag import KLScorer
 
 experiments = [

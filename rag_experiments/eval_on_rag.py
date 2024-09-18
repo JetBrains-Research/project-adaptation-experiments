@@ -69,6 +69,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         context_composer = FileScoreComposer(lang_extensions=[".py"])
 
     for ctx_len in config_eval.eval.context_size_list:
+        print(ctx_len)
         config_eval.eval.context_size = ctx_len
 
         if config_eval.data.composer_name == "path_distance":
