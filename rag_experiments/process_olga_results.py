@@ -72,7 +72,6 @@ def select_unique(input_file, out_file):
     data_unique.to_json(out_file, orient="records", lines=True)
 
 #%%
-# dataset_path = "/mnt/data2/kolomyttseva/learned-retrieval/jsonl/1gv763pn/generated_data/pred_medium_context_True.jsonl"
 dataset_path = "/mnt/data2/kolomyttseva/learned-retrieval/jsonl/hb2hs66c/generated_data/pred_medium_context_True.jsonl"
 with open(dataset_path) as f:
     precomp_dataset_raw = pd.read_json(f, orient="records", lines=True)
@@ -94,12 +93,12 @@ print(res_mixed)
 em_olga = exact_match_olga(precomp_dataset_raw)
 
 #%%
-# tokenizer.encode
-precomp_dataset["input_len_symb"] = precomp_dataset["model_inputs"].apply(len)
+
+# precomp_dataset["input_len_symb"] = precomp_dataset["model_inputs"].apply(len)
 
 #%%
 
-output_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
+output_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
 precomp_dataset.to_json(output_path, orient="records", lines=True)
 
 # %%
@@ -109,9 +108,14 @@ precomp_dataset.to_json(output_path, orient="records", lines=True)
 
 # add_hash(input_data_path, output_data_path)
 
-input_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
+input_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
 add_hash(input_path, input_path)
 
+#%%
+
+# with open(input_path) as f:
+#     data = pd.read_json(f, orient="records", lines=True)
+data["hash"].nunique()
 # %%
 
 output_unique_data_path = Path(

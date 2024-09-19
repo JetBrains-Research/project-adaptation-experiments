@@ -1,13 +1,12 @@
 output:
-  result_folder: "/mnt/data2/galimzyanov/long-contex-eval/output/rag/"
-  results_filename: "results_no_context.jsonl"
+  result_folder: "/mnt/data2/galimzyanov/long-contex-eval/output/rag/dev"
+  results_filename: "results_dev.jsonl"
 data:
   dataset_name: "JetBrains-Research/lca-project-level-code-completion"
   # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "kl_chunk_score", "from_file", "no_context"]
-  composer_name: "no_context"
+  composer_name: "path_distance"
   # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
-  # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
-  composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
+  composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
   # Eligible scopes: ["medium_context", "large_context", "huge_context"]
   # do not use "small_context"
   context_scopes: ["medium_context"]
