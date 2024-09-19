@@ -72,7 +72,9 @@ class FromFileComposer(PathDistanceComposer):
     ) -> dict[str]:
         item_completion = self.completion_composer(datapoint, line_index)
         best_file = self.get_best_context(datapoint, line_index)
-        model_inputs = str(best_file["model_inputs"])
+        if isinstance(best_file, pd.DataFrame):
+            best_file = best_file.iloc[0]
+        model_inputs = best_file["model_inputs"]
         item_completion["full_context"] = model_inputs#.rstrip() + "\n"
 
         return item_completion
