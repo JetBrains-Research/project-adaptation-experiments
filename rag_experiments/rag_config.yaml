@@ -3,4 +3,4 @@ chunk_lines_size: 64
 overlap_lines_size: 8
 completion_file_truncate_lines: 64
 chunk_completion_file: True
-top_k: 1000
+top_k: 1

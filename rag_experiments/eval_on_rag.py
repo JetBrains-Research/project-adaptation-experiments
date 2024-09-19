@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.data.plcc.plcc_dataset import get_context_composer
+from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
 from omegaconf import OmegaConf
@@ -72,11 +73,13 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
             lang_extensions=[".py"], rag_config=config_rag, scorer=scorer
         )
     if config_eval.data.composer_name == "iou_file_score":
-        context_composer = FileScoreComposer(lang_extensions=[".py"])
+        context_composer = FileScoreComposer(lang_extensions=[".py"], top_k=config_rag.top_k)
     if config_eval.data.composer_name == "from_file":
         context_composer = FromFileComposer(
             lang_extensions=[".py"], dataset_path=config_eval.data.composer_dataset_file
         )
+    if config_eval.data.composer_name == "no_context":
+        context_composer = BaseContextComposer(lang_extensions=[".py"], allowed_extensions = config_eval.data.allowed_extensions)
 
     for ctx_len in config_eval.eval.context_size_list:
         print(ctx_len)
