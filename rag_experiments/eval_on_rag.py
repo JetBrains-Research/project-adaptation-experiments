@@ -51,6 +51,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
 
     generation_engine = VllmEngine(
         config_eval.model.model_name,
+        context_size=config_eval.eval.context_size,
         vllm_args=dict(config_eval.vllm.vllm_args),
         generation_args=dict(config_eval.vllm.generation_args),
     )
@@ -60,6 +61,9 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         result_filename=config_eval.output.results_filename,
     )
 
+    print(40*"-")
+    print(f"Composer - {config_eval.data.composer_name}")
+    print(f"Model - {config_eval.model.model_name}")
     if config_eval.data.composer_name == "kl_chunk_score":
         device_num = 1
         device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
@@ -82,7 +86,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         context_composer = BaseContextComposer(lang_extensions=[".py"], allowed_extensions = config_eval.data.allowed_extensions)
 
     for ctx_len in config_eval.eval.context_size_list:
-        print(ctx_len)
+        print(f"Context length = {ctx_len}")
         config_eval.eval.context_size = ctx_len
 
         if config_eval.data.composer_name == "path_distance":
