@@ -4,18 +4,19 @@ from pathlib import Path
 import jsonlines
 import pandas as pd
 import torch
+from kotlineval.data.plcc.base_context_composer import BaseContextComposer
+from kotlineval.data.plcc.context_composer import PathDistanceComposer
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.data.plcc.plcc_dataset import get_context_composer
-from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
 from omegaconf import OmegaConf
 
+from from_file_context_composer import FromFileComposer
 from iou_chunk_scorer import IOUChunkScorer
 from kl_rag import KLScorer
 from score_chunk_context_composer import ChunkScoreComposer
 from score_file_context_composer import FileScoreComposer
-from from_file_context_composer import FromFileComposer
 
 
 def ammend_summary(config_eval, config_rag):
@@ -61,7 +62,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         result_filename=config_eval.output.results_filename,
     )
 
-    print(40*"-")
+    print(40 * "-")
     print(f"Composer - {config_eval.data.composer_name}")
     print(f"Model - {config_eval.model.model_name}")
     if config_eval.data.composer_name == "kl_chunk_score":
@@ -69,28 +70,44 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
         scorer = KLScorer(model_name=config_rag.model, device=device)
         context_composer = ChunkScoreComposer(
-            lang_extensions=[".py"], rag_config=config_rag, scorer=scorer
+            lang_extensions=config_eval.data.lang_extensions,
+            rag_config=config_rag,
+            scorer=scorer,
         )
-    if config_eval.data.composer_name == "iou_chunk_score":
+    elif config_eval.data.composer_name == "iou_chunk_score":
         scorer = IOUChunkScorer(model_name=config_rag.model)
         context_composer = ChunkScoreComposer(
-            lang_extensions=[".py"], rag_config=config_rag, scorer=scorer
+            lang_extensions=config_eval.data.lang_extensions,
+            rag_config=config_rag,
+            scorer=scorer,
         )
-    if config_eval.data.composer_name == "iou_file_score":
-        context_composer = FileScoreComposer(lang_extensions=[".py"], top_k=config_rag.top_k)
-    if config_eval.data.composer_name == "from_file":
+    elif config_eval.data.composer_name == "iou_file_score":
+        context_composer = FileScoreComposer(
+            lang_extensions=[".py"], top_k=config_rag.top_k
+        )
+    elif config_eval.data.composer_name == "from_file":
         context_composer = FromFileComposer(
-            lang_extensions=[".py"], dataset_path=config_eval.data.composer_dataset_file
+            lang_extensions=config_eval.data.lang_extensions,
+            dataset_path=config_eval.data.composer_dataset_file,
         )
-    if config_eval.data.composer_name == "no_context":
-        context_composer = BaseContextComposer(lang_extensions=[".py"], allowed_extensions = config_eval.data.allowed_extensions)
+    elif config_eval.data.composer_name == "no_context":
+        context_composer = BaseContextComposer(
+            lang_extensions=[".py"],
+            allowed_extensions=config_eval.data.allowed_extensions,
+        )
+    elif config_eval.data.composer_name == "path_distance":
+        context_composer = PathDistanceComposer(
+            filter_extensions=config_eval.data.filter_extensions,
+            lang_extensions=config_eval.data.lang_extensions,
+            allowed_extensions=config_eval.data.allowed_extensions,
+            completion_categories=config_eval.data.completion_categories,
+        )
+    else:
+        raise ValueError(f"There is no {config_eval.data.composer_name} composer")
 
     for ctx_len in config_eval.eval.context_size_list:
         print(f"Context length = {ctx_len}")
         config_eval.eval.context_size = ctx_len
-
-        if config_eval.data.composer_name == "path_distance":
-            context_composer = get_context_composer(config_eval.data)
 
         dataloader = get_dataloader(config_eval, context_composer)
 

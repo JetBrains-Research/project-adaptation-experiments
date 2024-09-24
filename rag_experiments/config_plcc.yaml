@@ -1,26 +1,26 @@
 output:
   result_folder: "/mnt/data2/galimzyanov/long-contex-eval/output/rag/"
-  results_filename: "results_DS6p7_14k.jsonl"
+  results_filename: "results_compare.jsonl"
 data:
   dataset_name: "JetBrains-Research/lca-project-level-code-completion"
   # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "kl_chunk_score", "from_file", "no_context"]
   composer_name: "path_distance"
-  # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
-  composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
+  composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
+  # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
   # Eligible scopes: ["medium_context", "large_context", "huge_context"]
   # do not use "small_context"
   context_scopes: ["medium_context"]
-  completion_categories: ["infile", "inproject"]
-  filter_extensions: true
+  completion_categories: ["inproject"]#"infile",
+  filter_extensions: false
   # Only those extentions would be added to the context
   lang_extensions: [".py"]
   allowed_extensions: [".md", ".txt", ".rst"]
 model:
   # "codellama/CodeLlama-7b-hf", "deepseek-ai/deepseek-coder-1.3b-base"
   # "codellama/CodeLlama-7b-Python-hf"
-  model_name: "deepseek-ai/deepseek-coder-6.7b-base"
+  model_name: "deepseek-ai/deepseek-coder-1.3b-base"
   # We assess the avg toke length to make context truncation more effective.
-  # We truncate the context before tokenization. Tokenizer truncates se seauence too.
+  # We truncate the context before tokenization. Tokenizer truncates se sequence too.
   # Here instead you can fix it by any float.
   # If it is too large, no problem, the context would not be truncated before tokenization.
   token_length: 4
@@ -29,18 +29,18 @@ use_vllm: True
 vllm:
   vllm_args:
     download_dir: /mnt/data2/tmp
-    max_model_len: 14000
+      # max_model_len: 14000
 #    gpu_memory_utilization: 0.1
   generation_args:
     temperature: 0.0
     max_tokens: 100
     # Used to avoid early stopping on the empty line
-    min_tokens: 2
+    min_tokens: 5
     stop: ["\n"]
 eval:
   # For VLLM this value can be arbitrary large, since it batches the items inside
   batch_size: 400
-  context_size: 13900 # 16256
+  context_size: 16000 # 16256
   # Is not used in the library, but can be used in outer scripts to iterate over the context.
-  context_size_list: [13900]# [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
+  context_size_list: [16000]# [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
   # max_new_tokens: 100

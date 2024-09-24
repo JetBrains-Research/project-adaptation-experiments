@@ -1,9 +1,9 @@
 import hashlib
+from pathlib import Path
 
+import pandas as pd
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
 from omegaconf import DictConfig, OmegaConf
-from pathlib import Path
-import pandas as pd
 
 from data_loading import get_file_and_repo
 from iou_chunk_scorer import calculate_iou
@@ -27,7 +27,7 @@ class FromFileComposer(PathDistanceComposer):
         )
         with open(dataset_path) as f:
             self.precomp_dataset = pd.read_json(f, orient="records", lines=True)
-        self.precomp_dataset = self.precomp_dataset.set_index("hash")
+        self.precomp_dataset = self.precomp_dataset.set_index("hash_dp")
 
     @staticmethod
     def calc_hash(completion_dp, line_index: int, line_type: str) -> str:
@@ -46,7 +46,9 @@ class FromFileComposer(PathDistanceComposer):
         sha256.update(string_id.encode("utf-8"))
         return sha256.hexdigest()
 
-    def get_best_context(self, datapoint: dict, line_index: int | None = None) -> pd.Series:
+    def get_best_context(
+        self, datapoint: dict, line_index: int | None = None
+    ) -> pd.Series:
         completion_dp = self.completion_composer(datapoint, line_index)
         line_type = [
             key
@@ -70,20 +72,21 @@ class FromFileComposer(PathDistanceComposer):
     def context_and_completion_composer(
         self, datapoint: dict, line_index: int
     ) -> dict[str]:
+        context = self.context_composer(datapoint, line_index)
         item_completion = self.completion_composer(datapoint, line_index)
         best_file = self.get_best_context(datapoint, line_index)
         if isinstance(best_file, pd.DataFrame):
             best_file = best_file.iloc[0]
         model_inputs = best_file["model_inputs"]
-        item_completion["full_context"] = model_inputs#.rstrip() + "\n"
+        item_completion["full_context"] = model_inputs  # .rstrip() + "\n"
 
         return item_completion
 
 
 if __name__ == "__main__":
 
-    # best_contexts_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
-    best_contexts_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
+    best_contexts_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
+    # best_contexts_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
     rag_config = OmegaConf.load("rag_config.yaml")
     score_composer = FromFileComposer(
         lang_extensions=[".py"], dataset_path=best_contexts_path
