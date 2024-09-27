@@ -83,7 +83,10 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         )
     elif config_eval.data.composer_name == "iou_file_score":
         context_composer = FileScoreComposer(
-            lang_extensions=[".py"], top_k=config_rag.top_k
+            lang_extensions=[".py"],
+            top_k=config_rag.top_k,
+            iou_type=config_rag.iou_file_type,
+            model_name=config_eval.model.model_name,
         )
     elif config_eval.data.composer_name == "from_file":
         context_composer = FromFileComposer(
@@ -101,6 +104,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
             lang_extensions=config_eval.data.lang_extensions,
             allowed_extensions=config_eval.data.allowed_extensions,
             completion_categories=config_eval.data.completion_categories,
+            topk=config_eval.data.topk,
         )
     else:
         raise ValueError(f"There is no {config_eval.data.composer_name} composer")

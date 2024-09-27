@@ -1,17 +1,18 @@
 output:
   result_folder: "/mnt/data2/galimzyanov/long-contex-eval/output/rag/"
-  results_filename: "results_compare.jsonl"
+  results_filename: "results_token.jsonl"
 data:
   dataset_name: "JetBrains-Research/lca-project-level-code-completion"
   # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "kl_chunk_score", "from_file", "no_context"]
-  composer_name: "path_distance"
+  composer_name: "iou_file_score"
+  topk: 1
   composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
   # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
   # Eligible scopes: ["medium_context", "large_context", "huge_context"]
   # do not use "small_context"
   context_scopes: ["medium_context"]
-  completion_categories: ["inproject"]#"infile",
-  filter_extensions: false
+  completion_categories: ["infile", "inproject"]#"infile", "inproject"
+  filter_extensions: true
   # Only those extentions would be added to the context
   lang_extensions: [".py"]
   allowed_extensions: [".md", ".txt", ".rst"]
@@ -39,8 +40,8 @@ vllm:
     stop: ["\n"]
 eval:
   # For VLLM this value can be arbitrary large, since it batches the items inside
-  batch_size: 400
-  context_size: 16000 # 16256
+  batch_size: 40
+  context_size: 16256 # 16256
   # Is not used in the library, but can be used in outer scripts to iterate over the context.
-  context_size_list: [16000]# [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
+  context_size_list: [16256]# [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
   # max_new_tokens: 100

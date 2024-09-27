@@ -1,5 +1,6 @@
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
 from omegaconf import OmegaConf
+from transformers import AutoTokenizer
 
 from data_loading import get_file_and_repo
 from iou_chunk_scorer import calculate_iou
@@ -14,6 +15,8 @@ class FileScoreComposer(PathDistanceComposer):
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt", ".rst"],
         completion_categories: list[str] = ["infile", "inproject"],
+        iou_type: str = "by_line",
+        model_name: str | None = None,
     ):
         super(FileScoreComposer, self).__init__(
             lang_extensions=lang_extensions,
@@ -22,6 +25,14 @@ class FileScoreComposer(PathDistanceComposer):
             completion_categories=completion_categories,
         )
         self.top_k = top_k
+        if iou_type == "by_line":
+            self.iou_file_scorer = self.calc_line_iou
+        elif iou_type == "by_token" and (model_name is not None):
+            self.iou_file_scorer = self.calc_token_iou
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self.tokenizer.truncation_side = "left"
+        else:
+            raise ValueError("No such iou_type scorer or provide model name")
 
     @staticmethod
     def split_by_lines_and_strip(file: str) -> list[str]:
@@ -32,10 +43,17 @@ class FileScoreComposer(PathDistanceComposer):
         lines = [line for line in lines if (line.strip("#") not in stoplist)]
         return lines
 
-    def calc_iou_between_files(self, file1: str, file2: str):
+    def calc_line_iou(self, file1: str, file2: str):
         lines1 = self.split_by_lines_and_strip(file1)
         lines2 = self.split_by_lines_and_strip(file2)
         iou_score = calculate_iou(lines1, lines2)
+
+        return iou_score
+
+    def calc_token_iou(self, file1: str, file2: str):
+        tokens1 = set(self.tokenizer.encode(file1))
+        tokens2 = set(self.tokenizer.encode(file2))
+        iou_score = calculate_iou(tokens1, tokens2)
 
         return iou_score
 
@@ -45,7 +63,7 @@ class FileScoreComposer(PathDistanceComposer):
         completion_prefix = self.completion_composer(datapoint, line_index)["prefix"]
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
         scores = [
-            self.calc_iou_between_files(completion_prefix, repo_file)
+            self.iou_file_scorer(completion_prefix, repo_file)
             for repo_file in repo_snapshot.content
         ]
         repo_snapshot.score = scores
@@ -68,8 +86,8 @@ class FileScoreComposer(PathDistanceComposer):
 
 if __name__ == "__main__":
 
-    rag_config = OmegaConf.load("rag_config.yaml")
-    score_composer = FileScoreComposer(lang_extensions=[".py"])
+    config_rag = OmegaConf.load("rag_config.yaml")
+    score_composer = FileScoreComposer(lang_extensions=[".py"], top_k=config_rag.top_k)
 
     from datasets import load_dataset
 
