@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 from kotlineval.eval.plcc.evaluator import add_hash
 from tqdm import tqdm
 from transformers import AutoTokenizer
@@ -74,6 +75,8 @@ def add_tokenized_files(raw_results: pd.DataFrame, results_added_path):
 
     return raw_results
 
+# def calc_em(row):
+#     return row['preds'].strip() == row['gts'].strip()
 
 # %%
 

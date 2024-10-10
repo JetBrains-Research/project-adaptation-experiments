@@ -44,14 +44,12 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
 
     config_eval = OmegaConf.load(eval_config_path)
     results_filename = Path(config_eval.output.results_filename)
-    results_filename = results_filename.with_stem(
-        results_filename.stem + "_" + config_eval.data.composer_name
-    )
     config_eval.output.results_filename = results_filename
     config_rag = OmegaConf.load(rag_config_path)
 
     generation_engine = VllmEngine(
-        config_eval.model.model_name,
+        hf_model_path=config_eval.model.model_name_or_path,
+        model_name=config_eval.model.get("model_name"),
         context_size=config_eval.eval.context_size,
         vllm_args=dict(config_eval.vllm.vllm_args),
         generation_args=dict(config_eval.vllm.generation_args),
@@ -60,48 +58,50 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         engine=generation_engine,
         result_folder=config_eval.output.result_folder,
         result_filename=config_eval.output.results_filename,
+        # log_model_inputs = config_eval.eval.log_model_inputs,
+        config=config_eval
     )
 
     print(40 * "-")
     print(f"Composer - {config_eval.data.composer_name}")
-    print(f"Model - {config_eval.model.model_name}")
+    print(f"Model - {config_eval.model.model_name_or_path}")
     if config_eval.data.composer_name == "kl_chunk_score":
         device_num = 1
         device = f"cuda:{device_num}" if torch.cuda.is_available() else "cpu"
         scorer = KLScorer(model_name=config_rag.model, device=device)
         context_composer = ChunkScoreComposer(
-            lang_extensions=config_eval.data.lang_extensions,
+            language=config_eval.data.language,
             rag_config=config_rag,
             scorer=scorer,
         )
     elif config_eval.data.composer_name == "iou_chunk_score":
         scorer = IOUChunkScorer(model_name=config_rag.model)
         context_composer = ChunkScoreComposer(
-            lang_extensions=config_eval.data.lang_extensions,
+            language=config_eval.data.language,
             rag_config=config_rag,
             scorer=scorer,
         )
     elif config_eval.data.composer_name == "iou_file_score":
         context_composer = FileScoreComposer(
-            lang_extensions=[".py"],
+            language=config_eval.data.language,
             top_k=config_rag.top_k,
             iou_type=config_rag.iou_file_type,
-            model_name=config_eval.model.model_name,
+            model_name=config_eval.model.model_name_or_path,
         )
     elif config_eval.data.composer_name == "from_file":
         context_composer = FromFileComposer(
-            lang_extensions=config_eval.data.lang_extensions,
+            language=config_eval.data.language,
             dataset_path=config_eval.data.composer_dataset_file,
         )
     elif config_eval.data.composer_name == "no_context":
         context_composer = BaseContextComposer(
-            lang_extensions=[".py"],
+            language=config_eval.data.language,
             allowed_extensions=config_eval.data.allowed_extensions,
         )
     elif config_eval.data.composer_name == "path_distance":
         context_composer = PathDistanceComposer(
             filter_extensions=config_eval.data.filter_extensions,
-            lang_extensions=config_eval.data.lang_extensions,
+            language=config_eval.data.language,
             allowed_extensions=config_eval.data.allowed_extensions,
             completion_categories=config_eval.data.completion_categories,
             topk=config_eval.data.topk,

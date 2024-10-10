@@ -9,7 +9,7 @@ from iou_chunk_scorer import IOUChunkScorer
 class ChunkScoreComposer(BaseContextComposer):
     def __init__(
         self,
-        lang_extensions: list[str],
+        language: str,
         rag_config: DictConfig,
         scorer,
         filter_extensions: bool = True,
@@ -17,7 +17,7 @@ class ChunkScoreComposer(BaseContextComposer):
         completion_categories: list[str] = ["infile", "inproject"],
     ):
         super(ChunkScoreComposer, self).__init__(
-            lang_extensions=lang_extensions,
+            language=language,
             filter_extensions=filter_extensions,
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,

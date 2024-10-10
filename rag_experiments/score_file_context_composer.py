@@ -10,7 +10,7 @@ from iou_chunk_scorer import calculate_iou
 class FileScoreComposer(PathDistanceComposer):
     def __init__(
         self,
-        lang_extensions: list[str],
+        language: str,
         top_k: int = 100_000,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt", ".rst"],
@@ -19,7 +19,7 @@ class FileScoreComposer(PathDistanceComposer):
         model_name: str | None = None,
     ):
         super(FileScoreComposer, self).__init__(
-            lang_extensions=lang_extensions,
+            language = language,
             filter_extensions=filter_extensions,
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,

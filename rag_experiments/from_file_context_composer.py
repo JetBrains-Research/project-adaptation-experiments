@@ -13,14 +13,14 @@ from iou_chunk_scorer import calculate_iou
 class FromFileComposer(PathDistanceComposer):
     def __init__(
         self,
-        lang_extensions: list[str],
+        language: str,
         dataset_path: str | Path,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt", ".rst"],
         completion_categories: list[str] = ["infile", "inproject"],
     ):
         super(FromFileComposer, self).__init__(
-            lang_extensions=lang_extensions,
+            language=language,
             filter_extensions=filter_extensions,
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,
