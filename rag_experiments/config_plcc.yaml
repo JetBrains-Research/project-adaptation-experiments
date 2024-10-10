@@ -42,7 +42,7 @@ vllm:
     stop: ["\n"]
 eval:
   # For VLLM this value can be arbitrary large, since it batches the items inside
-  batch_size: 40
+  batch_size: 400
   context_size: 1024 # 16256
   # Is not used in the library, but can be used in outer scripts to iterate over the context.
   context_size_list: [1024]# [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
