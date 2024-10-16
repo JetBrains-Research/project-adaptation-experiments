@@ -108,6 +108,7 @@ class Chunk:
     chunk_idx: int
     max_chunks: int
     content: str
+    content_token: list[str|int] | None = None
     score: float | None = None
 
     def __str__(self):

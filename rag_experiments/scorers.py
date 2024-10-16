@@ -18,9 +18,10 @@ class BaseScorer:
         # if self.compl_file_trunc_lines < 1: TODO
         
         for chunk in chunked_repo:
-            chunk_split = self.splitter(chunk.content)
+            if chunk.content_token is None:
+                chunk.content_token = self.splitter(chunk.content)
             # removing BOS token TODO
-            scores.append(self.score(completion_split, chunk_split))
+            scores.append(self.score(completion_split, chunk.content_token))
         
         chunked_repo.set_scores(scores)
         return chunked_repo

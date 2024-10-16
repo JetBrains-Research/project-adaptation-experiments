@@ -79,24 +79,30 @@ class ChunkScoreComposer(BaseContextComposer):
 
         return chunked_repo
 
-    def context_composer(self, datapoint: dict, line_index: int | None = None) -> str:
+    def context_composer(
+        self, datapoint: dict, line_index: int, cashed_repo: dict | None = None
+    ) -> tuple[str, dict | None]:
         # get completion file and repo from datapoint TODO
         _, repo_snapshot = get_file_and_repo(datapoint)
 
         # TODO get complition file before gt line
         completion_item = self.completion_composer(datapoint, line_index)
 
-        chunked_repo = self._get_chunks(completion_item, repo_snapshot)
+        if cashed_repo is not None:
+            chunked_repo = cashed_repo["cashed_repo"]
+        else:
+            chunked_repo = self._get_chunks(completion_item, repo_snapshot)
+            cashed_repo = {"cashed_repo": chunked_repo}
         scored_chunked_repo = self._score_chunks(completion_item["prefix"], chunked_repo)
         context = self.merge_chunks(scored_chunked_repo)
 
-        return context
+        return context, cashed_repo
 
     def context_and_completion_composer(
-        self, datapoint: dict, line_index: int
-    ) -> dict[str, str]:
+        self, datapoint: dict, line_index: int, cashed_repo: dict | None = None
+    ) -> tuple[dict[str, str], dict | None]:
 
-        context = self.context_composer(datapoint, line_index)
+        context, cashed_repo = self.context_composer(datapoint, line_index, cashed_repo)
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
             self.last_chunk.filename + "\n\n" + self.last_chunk.content.strip() + "\n"
@@ -104,7 +110,7 @@ class ChunkScoreComposer(BaseContextComposer):
         full_context = context + "\n\n" + completion_context
         completion_item["full_context"] = full_context
 
-        return completion_item
+        return completion_item, cashed_repo
 
 
 # # TODO add others context composers

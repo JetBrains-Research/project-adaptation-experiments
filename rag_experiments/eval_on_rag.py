@@ -8,13 +8,11 @@ import torch
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
 from kotlineval.data.plcc.data_loader import get_dataloader
-from kotlineval.data.plcc.plcc_dataset import get_context_composer
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
 from omegaconf import OmegaConf
 
 from from_file_context_composer import FromFileComposer
-from iou_chunk_scorer import IOUChunkScorer
 from kl_rag import KLScorer
 from score_chunk_context_composer import ChunkScoreComposer
 from score_file_context_composer import FileScoreComposer
@@ -90,7 +88,6 @@ def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> Non
             scorer=scorer,
         )
     elif config.data.composer_name == "iou_chunk_score":
-        # scorer = IOUChunkScorer(model_name=config_rag.model)
         splitter = ModelSplitter(model_name=config_rag.model)
         scorer = IOUScorer(splitter)
         chunker = FixedLineChunker()
@@ -133,7 +130,11 @@ def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> Non
         config.eval.context_size = ctx_len
 
         dataloader = get_dataloader(config, context_composer)
-
+        # from tqdm import tqdm
+        # for item in tqdm(dataloader):
+        #     _ = item
+        # import sys
+        # sys.exit(0)
         summary = evaluator.eval(dataloader, limit=limit)
         # TODO fix output filename
         # ammend_summary(config_eval, config_rag)
