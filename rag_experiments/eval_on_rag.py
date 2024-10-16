@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+from fire import Fire
 
 import jsonlines
 import pandas as pd
@@ -18,6 +19,15 @@ from kl_rag import KLScorer
 from score_chunk_context_composer import ChunkScoreComposer
 from score_file_context_composer import FileScoreComposer
 
+from scorers import IOUScorer
+from splitters import LinesSplitter, ModelSplitter
+from chunkers import Chunker
+
+'''
+CUDA_VISIBLE_DEVICES=4 python3 eval_on_rag.py --eval_config_path config_plcc.yaml \
+                                              --rag_config_path rag_config.yaml \
+                                              --limit 10
+'''
 
 def ammend_summary(config_eval, config_rag):
 
@@ -41,7 +51,12 @@ def ammend_summary(config_eval, config_rag):
 
 
 def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) -> None:
-
+    '''
+        eval_config_path: str
+            Path to yaml config
+        limit: int
+            Number of batches in dataloader
+    '''
     config_eval = OmegaConf.load(eval_config_path)
     results_filename = Path(config_eval.output.results_filename)
     config_eval.output.results_filename = results_filename
@@ -75,9 +90,13 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
             scorer=scorer,
         )
     elif config_eval.data.composer_name == "iou_chunk_score":
-        scorer = IOUChunkScorer(model_name=config_rag.model)
+        # scorer = IOUChunkScorer(model_name=config_rag.model)
+        splitter = ModelSplitter(model_name=config_rag.model)
+        scorer = IOUScorer(splitter)
+        chunker = Chunker()
         context_composer = ChunkScoreComposer(
             language=config_eval.data.language,
+            chunker=chunker,
             rag_config=config_rag,
             scorer=scorer,
         )
@@ -116,14 +135,17 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         dataloader = get_dataloader(config_eval, context_composer)
 
         summary = evaluator.eval(dataloader, limit=limit)
-        ammend_summary(config_eval, config_rag)
+        # ammend_summary(config_eval, config_rag)
 
         print(summary)
         time.sleep(5)
 
 
-if __name__ == "__main__":
-    eval_config_path = "config_plcc.yaml"
-    rag_config_path = "rag_config.yaml"
+# if __name__ == "__main__":
+#     eval_config_path = "config_plcc.yaml"
+#     rag_config_path = "rag_config.yaml"
 
-    run_eval_plcc(eval_config_path, rag_config_path, limit=-1)
+#     run_eval_plcc(eval_config_path, rag_config_path, limit=-1)
+
+if __name__ == '__main__':
+    Fire(run_eval_plcc)
