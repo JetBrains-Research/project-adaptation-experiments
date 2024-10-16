@@ -22,5 +22,5 @@ class LinesSplitter(BaseSplitter):
         lines = string.split("\n")
         lines = [line.strip() for line in lines if line.strip()]
 
-        lines = [line for line in lines if (line.strip("#") not in stoplist)]
+        lines = [line for line in lines if (line.strip("#").strip() not in stoplist)]
         return lines
