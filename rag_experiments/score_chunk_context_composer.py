@@ -3,7 +3,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from data_loading import ChunkedRepo, RepoStorage, FileStorage, chunk_repository, get_file_and_repo
 from iou_chunk_scorer import IOUChunkScorer
-from chunkers import BaseChunker, Chunker
+from chunkers import BaseChunker
 from splitters import BaseSplitter
 from scorers import BaseScorer
 
@@ -83,7 +83,7 @@ class ChunkScoreComposer(BaseContextComposer):
         # get completion file and repo from datapoint TODO
         _, repo_snapshot = get_file_and_repo(datapoint)
 
-        # get complition file before gt line TODO
+        # TODO get complition file before gt line
         completion_item = self.completion_composer(datapoint, line_index)
 
         chunked_repo = self._get_chunks(completion_item, repo_snapshot)

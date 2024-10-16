@@ -12,7 +12,7 @@ class BaseChunker:
                 chunked_repo.append(chunked_file)
         return chunked_repo
 
-class Chunker(BaseChunker):
+class FixedLineChunker(BaseChunker):
     def chunk(
         self,
         file_st: FileStorage,

@@ -21,7 +21,7 @@ from score_file_context_composer import FileScoreComposer
 
 from scorers import IOUScorer
 from splitters import LinesSplitter, ModelSplitter
-from chunkers import Chunker
+from chunkers import FixedLineChunker
 
 '''
 CUDA_VISIBLE_DEVICES=4 python3 eval_on_rag.py --eval_config_path config_plcc.yaml \
@@ -93,7 +93,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         # scorer = IOUChunkScorer(model_name=config_rag.model)
         splitter = ModelSplitter(model_name=config_rag.model)
         scorer = IOUScorer(splitter)
-        chunker = Chunker()
+        chunker = FixedLineChunker()
         context_composer = ChunkScoreComposer(
             language=config_eval.data.language,
             chunker=chunker,
@@ -135,6 +135,7 @@ def run_eval_plcc(eval_config_path: str, rag_config_path: str, limit: int = -1) 
         dataloader = get_dataloader(config_eval, context_composer)
 
         summary = evaluator.eval(dataloader, limit=limit)
+        # TODO fix output filename
         # ammend_summary(config_eval, config_rag)
 
         print(summary)
