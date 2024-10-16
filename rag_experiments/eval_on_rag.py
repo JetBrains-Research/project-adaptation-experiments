@@ -63,7 +63,7 @@ def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> Non
     generation_engine = VllmEngine(
         hf_model_path=config.model.model_name_or_path,
         model_name=config.model.get("model_name"),
-        context_size=config.eval.context_size,
+        context_size=max(config.eval.context_size_list),
         vllm_args=dict(config.vllm.vllm_args),
         generation_args=dict(config.vllm.generation_args),
     )
@@ -125,29 +125,15 @@ def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> Non
     else:
         raise ValueError(f"There is no {config.data.composer_name} composer")
 
-    for ctx_len in config.eval.context_size_list:
-        print(f"Context length = {ctx_len}")
-        config.eval.context_size = ctx_len
-
-        dataloader = get_dataloader(config, context_composer)
-        # from tqdm import tqdm
-        # for item in tqdm(dataloader):
-        #     _ = item
-        # import sys
-        # sys.exit(0)
-        summary = evaluator.eval(dataloader, limit=limit)
-        # TODO fix output filename
-        # ammend_summary(config_eval, config_rag)
-
-        print(summary)
-        time.sleep(5)
-
-
-# if __name__ == "__main__":
-#     eval_config_path = "config_plcc.yaml"
-#     rag_config_path = "rag_config.yaml"
-
-#     run_eval_plcc(eval_config_path, rag_config_path, limit=-1)
+    dataloader = get_dataloader(config, context_composer)
+    # from tqdm import tqdm
+    # for item in tqdm(dataloader):
+    #     _ = item
+    # import sys
+    # sys.exit(0)
+    summary = evaluator.eval(dataloader, limit=limit)
+    # TODO fix output filename
+    # ammend_summary(config_eval, config_rag)
 
 if __name__ == '__main__':
     Fire(run_eval_plcc)
