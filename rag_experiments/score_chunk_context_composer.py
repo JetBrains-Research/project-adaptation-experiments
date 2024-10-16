@@ -7,30 +7,6 @@ from chunkers import BaseChunker, Chunker
 from splitters import BaseSplitter
 from scorers import BaseScorer
 
-    def score_repo(
-        self,
-        completion_file: str,
-        chunked_repo: ChunkedRepo,
-        completion_file_truncate_lines: int = -1,
-    ) -> list[float]:
-        scores = list()
-        if completion_file_truncate_lines < 1:
-            completion_ids = self.get_token_ids(completion_file)
-        else:
-            completion_lines = completion_file.split("\n")
-            completion_lines = [line for line in completion_lines if line.strip()]
-            truncated_completion = "\n".join(
-                completion_lines[-completion_file_truncate_lines:]
-            )
-            completion_ids = self.get_token_ids(truncated_completion)
-        for chunk in chunked_repo:
-            chunk_ids = self.get_token_ids(chunk.content)
-            # removing BOS token
-            iou_score = calculate_iou(completion_ids[1:], chunk_ids[1:])
-            scores.append(iou_score)
-        return scores
-
-
 # TODO add others context composers
 class ChunkScoreComposer(BaseContextComposer):
     def __init__(
