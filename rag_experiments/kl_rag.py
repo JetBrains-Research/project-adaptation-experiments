@@ -3,13 +3,8 @@ from datasets import load_dataset
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from data_loading import (
-    ChunkedRepo,
-    FileStorage,
-    SplittedFile,
-    chunk_repository,
-    get_file_and_repo,
-)
+from data_loading import (ChunkedRepo, FileStorage, SplittedFile,
+                          chunk_repository, get_file_and_repo)
 
 
 class KLScorer:

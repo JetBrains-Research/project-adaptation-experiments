@@ -1,10 +1,9 @@
-import time
 from pathlib import Path
-from fire import Fire
 
 import jsonlines
 import pandas as pd
 import torch
+from fire import Fire
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
 from kotlineval.data.plcc.data_loader import get_dataloader
@@ -12,20 +11,20 @@ from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
 from omegaconf import OmegaConf
 
+from chunkers import FixedLineChunker
 from from_file_context_composer import FromFileComposer
 from kl_rag import KLScorer
 from score_chunk_context_composer import ChunkScoreComposer
 from score_file_context_composer import FileScoreComposer
-
 from scorers import IOUScorer
-from splitters import LinesSplitter, ModelSplitter
-from chunkers import FixedLineChunker
+from splitters import ModelSplitter
 
-'''
+"""
 CUDA_VISIBLE_DEVICES=4 python3 eval_on_rag.py --eval_config_path config_plcc.yaml \
                                               --rag_config_path rag_config.yaml \
                                               --limit 10
-'''
+"""
+
 
 def ammend_summary(config_eval, config_rag):
 
@@ -49,12 +48,12 @@ def ammend_summary(config_eval, config_rag):
 
 
 def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> None:
-    '''
-        eval_config_path: str
-            Path to yaml config
-        limit: int
-            Number of batches in dataloader
-    '''
+    """
+    eval_config_path: str
+        Path to yaml config
+    limit: int
+        Number of batches in dataloader
+    """
     config = OmegaConf.load(config_path)
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
@@ -72,7 +71,7 @@ def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> Non
         result_folder=config.output.result_folder,
         result_filename=config.output.results_filename,
         # log_model_inputs = config_eval.eval.log_model_inputs,
-        config=config
+        config=config,
     )
 
     print(40 * "-")
@@ -135,5 +134,6 @@ def run_eval_plcc(config_path: str = "config_plcc.yaml", limit: int = -1) -> Non
     # TODO fix output filename
     # ammend_summary(config_eval, config_rag)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Fire(run_eval_plcc)

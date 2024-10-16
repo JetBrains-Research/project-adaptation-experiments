@@ -19,7 +19,7 @@ class FileScoreComposer(PathDistanceComposer):
         model_name: str | None = None,
     ):
         super(FileScoreComposer, self).__init__(
-            language = language,
+            language=language,
             filter_extensions=filter_extensions,
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,

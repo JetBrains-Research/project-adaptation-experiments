@@ -1,7 +1,8 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-from data_loading import ChunkedRepo, SplittedFile, chunk_repository, get_file_and_repo
+from data_loading import (ChunkedRepo, SplittedFile, chunk_repository,
+                          get_file_and_repo)
 
 
 def calculate_iou(list1: list, list2: list) -> float:

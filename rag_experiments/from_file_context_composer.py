@@ -3,10 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
-from omegaconf import DictConfig, OmegaConf
-
-from data_loading import get_file_and_repo
-from iou_chunk_scorer import calculate_iou
+from omegaconf import OmegaConf
 
 
 # TODO add others context composers

@@ -1,6 +1,6 @@
-import pandas as pd
 import json
-from kotlineval.eval.plcc.evaluator import add_hash
+
+import pandas as pd
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
@@ -8,6 +8,7 @@ model_name = "deepseek-ai/deepseek-coder-1.3b-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tqdm.pandas()
 # %%
+
 
 def calculate_iou(list1: list, list2: list) -> float:
     set1 = set(list1)
@@ -19,6 +20,7 @@ def calculate_iou(list1: list, list2: list) -> float:
     iou = len(intersection) / len(union)
 
     return iou
+
 
 def split_and_tokenize(text: str) -> list[list[int]]:
 
@@ -43,7 +45,10 @@ def calc_iou_lines_score(text1: str, text2: str) -> float:
 
     return calculate_iou(lines1, lines2)
 
-def calc_iou_tokens_score(tokens_list1: list[list[int]], tokens_list2: list[list[int]]) -> float:
+
+def calc_iou_tokens_score(
+    tokens_list1: list[list[int]], tokens_list2: list[list[int]]
+) -> float:
 
     tokens1 = [t for tokens in tokens_list1 for t in tokens]
     tokens2 = [t for tokens in tokens_list2 for t in tokens]
@@ -54,10 +59,16 @@ def calc_iou_tokens_score(tokens_list1: list[list[int]], tokens_list2: list[list
 def add_iou_scores(results: pd.DataFrame) -> pd.DataFrame:
 
     results["iou_lines_file_score"] = results.progress_apply(
-        lambda row: calc_iou_lines_score(row["completion_content"], row["context_content"]), axis=1
+        lambda row: calc_iou_lines_score(
+            row["completion_content"], row["context_content"]
+        ),
+        axis=1,
     )
     results["iou_tokens_file_score"] = results.progress_apply(
-        lambda row: calc_iou_tokens_score(row["completion_line_tokens"], row["context_line_tokens"]), axis=1
+        lambda row: calc_iou_tokens_score(
+            row["completion_line_tokens"], row["context_line_tokens"]
+        ),
+        axis=1,
     )
 
     return results
@@ -74,6 +85,7 @@ def add_tokenized_files(raw_results: pd.DataFrame, results_added_path):
     raw_results.to_json(results_added_path, orient="records", lines=True)
 
     return raw_results
+
 
 # def calc_em(row):
 #     return row['preds'].strip() == row['gts'].strip()
@@ -94,17 +106,19 @@ results_added_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_brut
 with open(results_added_path) as f:
     results = pd.read_json(f, orient="records", lines=True)
 
-#%%
+# %%
 
 results = add_iou_scores(results)
 
-#%%
+# %%
 
 results_agg = results[["hash_dp", "EMs"]].groupby("hash_dp", as_index=False).agg("mean")
-results_agg_filtered = results_agg[(results_agg["EMs"]>0.1) & (results_agg["EMs"]<0.9)]
+results_agg_filtered = results_agg[
+    (results_agg["EMs"] > 0.1) & (results_agg["EMs"] < 0.9)
+]
 good_hash = list(results_agg_filtered["hash_dp"])
 results_filtered = results[results["hash_dp"].isin(good_hash)]
-#%%
+# %%
 
 print(results_filtered["iou_lines_file_score"].corr(results_filtered["EMs"]))
 print(results_filtered["iou_lines_file_score"].corr(results_filtered["chrf"]))
@@ -112,4 +126,4 @@ print(results_filtered["iou_lines_file_score"].corr(results_filtered["chrf"]))
 print(results_filtered["iou_tokens_file_score"].corr(results_filtered["EMs"]))
 print(results_filtered["iou_tokens_file_score"].corr(results_filtered["chrf"]))
 
-#%%
+# %%

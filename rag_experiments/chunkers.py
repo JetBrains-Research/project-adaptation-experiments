@@ -1,8 +1,9 @@
-from data_loading import ChunkedRepo, ChunkedFile, RepoStorage, FileStorage, SplittedFile
+from data_loading import ChunkedFile, ChunkedRepo, FileStorage, RepoStorage
+
 
 class BaseChunker:
     def chunk(self, file_st: FileStorage, *args, **kwargs) -> ChunkedFile:
-        return ChunkedFile(file_st.filename, [file_st.content]) 
+        return ChunkedFile(file_st.filename, [file_st.content])
 
     def __call__(self, repo_snapshot: RepoStorage, **chunking_kwargs) -> ChunkedRepo:
         chunked_repo = ChunkedRepo()
@@ -11,6 +12,7 @@ class BaseChunker:
                 chunked_file = self.chunk(file_st, **chunking_kwargs)
                 chunked_repo.append(chunked_file)
         return chunked_repo
+
 
 class FixedLineChunker(BaseChunker):
     def chunk(

@@ -3,10 +3,11 @@ from transformers import AutoTokenizer
 
 class BaseSplitter:
     def __init__(self, model_name: str | None = None):
-       pass
+        pass
 
     def __call__(self, string: str) -> list[str | int]:
         return [string]
+
 
 class ModelSplitter(BaseSplitter):
     def __init__(self, model_name: str):
@@ -15,6 +16,7 @@ class ModelSplitter(BaseSplitter):
 
     def __call__(self, string: str) -> list[int]:
         return self.tokenizer.encode(string)
+
 
 class LinesSplitter(BaseSplitter):
     def __call__(self, string: str) -> list[str]:
