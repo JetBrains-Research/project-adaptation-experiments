@@ -33,7 +33,7 @@ vllm:
   vllm_args:
      download_dir: /mnt/data2/tmp
      # max_model_len: 512
-     # gpu_memory_utilization: 0.2
+     gpu_memory_utilization: 0.15
   generation_args:
     temperature: 0.0
     max_tokens: 100
@@ -53,7 +53,7 @@ rag:
   completion_file_truncate_lines: 64
   chunk_completion_file: True
   iou_file_type: "by_token"
-  top_k: 1
-  splitter: "model_tokenizer"
+  top_k: 13
+  splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
   scorer: "iou"
-  chunker: "fixed_line"
+  chunker: "full_file" #["full_file", "fixed_line"]
