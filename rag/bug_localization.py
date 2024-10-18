@@ -100,8 +100,8 @@ def run_benchmark(limit=-1) -> pd.DataFrame:
     summary = grouped[metric_list].agg("mean").reset_index()
     print(summary)
 
-    results_df.to_json(output_folder / "results.jsonl", orient="records", lines=True)
-    summary.to_json(output_folder / "results_summary.jsonl", orient="records", lines=True)
+    results_df.to_json(output_folder / f"results_{config_rag.splitter}.jsonl", orient="records", lines=True)
+    summary.to_json(output_folder / f"results_{config_rag.splitter}_summary.jsonl", orient="records", lines=True)
 
     return results_df
 
