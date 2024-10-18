@@ -2,7 +2,7 @@ from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from omegaconf import DictConfig, OmegaConf
 
 from rag.rag_engine.chunkers import BaseChunker
-from rag.data_loading import ChunkedRepo, FileStorage, RepoStorage, get_file_and_repo
+from rag.data_loading import ChunkedRepo, FileStorage, RepoStorage, map_dp_to_dataclass
 from rag.rag_engine.scorers import BaseScorer
 
 
@@ -59,7 +59,7 @@ class ChunkScoreComposer(BaseContextComposer):
         # filter repo
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
 
-        # daa completion part to repo
+        # add completion part to repo
         if self.chunk_completion_file:
             repo_snapshot.add_item(
                 filename=completion_item["filename"], content=completion_item["prefix"]
@@ -90,10 +90,9 @@ class ChunkScoreComposer(BaseContextComposer):
     def context_composer(
         self, datapoint: dict, line_index: int, cashed_repo: dict | None = None
     ) -> tuple[str, dict | None]:
-        # get completion file and repo from datapoint TODO
-        _, repo_snapshot = get_file_and_repo(datapoint)
-
-        # TODO get complition file before gt line
+        # TODO get completion file and repo from datapoint.
+        repo_snapshot = map_dp_to_dataclass(datapoint)
+        # TODO get completion file before gt line
         completion_item = self.completion_composer(datapoint, line_index)
 
         if cashed_repo is not None:

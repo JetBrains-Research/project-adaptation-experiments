@@ -16,6 +16,7 @@ class FileStorage:
 
 @dataclass
 class RepoStorage:
+    # TODO I'd like to keep only a dict, not separate filename list and content
     filename: list[str]
     content: list[str]
     score: list[float] | None = None
@@ -145,12 +146,11 @@ class ChunkedRepo:
         return ChunkedRepo(sorted_chunks[:k])
 
 
-def get_file_and_repo(dp) -> tuple[FileStorage, RepoStorage]:
+def map_dp_to_dataclass(dp) -> RepoStorage:
     hf_repo_filename = dp.pop("repo_snapshot_filename", None)
     if hf_repo_filename is None:
         repo_snapshot = RepoStorage(**dp["repo_snapshot"])
     else:
         # TODO: get filenames map file and finish loading the dataset
         repo_snapshot = None
-    completion_file = FileStorage(**dp["completion_file"])
-    return completion_file, repo_snapshot
+    return repo_snapshot
