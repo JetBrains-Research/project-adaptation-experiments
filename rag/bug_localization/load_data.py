@@ -1,5 +1,5 @@
-from huggingface_hub import hf_hub_download
 import jsonlines
+from huggingface_hub import hf_hub_download
 
 
 def load_data(languages: list[str]) -> list[dict]:

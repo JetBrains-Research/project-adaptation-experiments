@@ -1,5 +1,5 @@
-from rag.rag_engine.splitters import BaseSplitter
 from rag.data_loading import ChunkedRepo
+from rag.rag_engine.splitters import BaseSplitter
 
 
 class BaseScorer:

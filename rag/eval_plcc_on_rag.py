@@ -1,6 +1,6 @@
-from pathlib import Path
-import sys
 import os
+import sys
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -12,8 +12,8 @@ from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
 from omegaconf import OmegaConf
 
-from rag_engine.chunkers import get_chunker
 from context_composers.get_composer import get_composer
+from rag_engine.chunkers import get_chunker
 from rag_engine.scorers import get_scorer
 from rag_engine.splitters import get_splitter
 

@@ -1,5 +1,5 @@
-from sklearn.metrics import ndcg_score
 import numpy as np
+from sklearn.metrics import ndcg_score
 
 
 def calc_f1(true_set: list | set, pred_set: list | set) -> float:
@@ -25,9 +25,12 @@ def calc_f1(true_set: list | set, pred_set: list | set) -> float:
     f1 = 2 * (precision * recall) / (precision + recall)
     return f1
 
+
 def calc_ndcg(true_docs: list[str], scored_list: dict[str, float]) -> float:
 
-    true_relevance = np.asarray([[1 if doc in true_docs else 0 for doc in scored_list.keys()]])
+    true_relevance = np.asarray(
+        [[1 if doc in true_docs else 0 for doc in scored_list.keys()]]
+    )
     scores = np.asarray([list(scored_list.values())])
     ndcg = ndcg_score(true_relevance, scores)
 

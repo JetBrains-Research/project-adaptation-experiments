@@ -5,11 +5,10 @@ from typing import Optional
 import huggingface_hub
 from datasets import load_dataset
 from huggingface_hub import hf_hub_download
+
 from rag.bug_localization.ds_features import FEATURES, HUGGINGFACE_REPO
 from rag.bug_localization.git_functions import (
-    get_changed_files_between_commits,
-    get_repo_content_on_commit,
-)
+    get_changed_files_between_commits, get_repo_content_on_commit)
 
 
 class HFDataSource:
@@ -50,7 +49,7 @@ class HFDataSource:
         # Load json file with repos paths
         paths_json = load_dataset(
             HUGGINGFACE_REPO,
-            data_files=f"repos.json",
+            data_files="repos.json",
             ignore_verifications=True,
             split="train",
             features=FEATURES["repos"],

@@ -1,6 +1,7 @@
-from tqdm import tqdm
 import pandas as pd
 from dotenv import load_dotenv
+from tqdm import tqdm
+
 from rag.bug_localization.hf_data_source import HFDataSource
 
 load_dotenv()

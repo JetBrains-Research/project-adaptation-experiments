@@ -1,8 +1,9 @@
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from omegaconf import DictConfig, OmegaConf
 
+from rag.data_loading import (ChunkedRepo, FileStorage, RepoStorage,
+                              map_dp_to_dataclass)
 from rag.rag_engine.chunkers import BaseChunker
-from rag.data_loading import ChunkedRepo, FileStorage, RepoStorage, map_dp_to_dataclass
 from rag.rag_engine.scorers import BaseScorer
 
 

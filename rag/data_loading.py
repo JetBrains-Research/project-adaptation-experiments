@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Iterator
 
-from datasets import load_dataset
-
 
 @dataclass
 class FileStorage:

@@ -1,5 +1,6 @@
-from transformers import AutoTokenizer
 import re
+
+from transformers import AutoTokenizer
 
 
 class BaseSplitter:

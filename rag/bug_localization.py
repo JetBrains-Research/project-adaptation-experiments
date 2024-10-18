@@ -1,18 +1,18 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
-
-import pandas as pd
-from tqdm import tqdm
-from omegaconf import OmegaConf
 from pathlib import Path
 
+import pandas as pd
+from omegaconf import OmegaConf
+from tqdm import tqdm
+
 from rag.bug_localization.load_data import load_data
-from rag.rag_engine.splitters import get_splitter
-from rag.rag_engine.scorers import get_scorer
 from rag.metrics.metrics import calc_f1, calc_ndcg
+from rag.rag_engine.scorers import get_scorer
+from rag.rag_engine.splitters import get_splitter
 
 
 def select_files(row: pd.Series) -> list[str]:
@@ -92,7 +92,13 @@ def run_benchmark(limit=-1) -> pd.DataFrame:
     print(
         f"Average time per repo million token = {results_df['time_per_repo_symb_M'].mean():.3f}"
     )
-    metric_list = ["f1", "ndcg", "time_s", "repo_symbols_count_M", "time_per_repo_symb_M"]
+    metric_list = [
+        "f1",
+        "ndcg",
+        "time_s",
+        "repo_symbols_count_M",
+        "time_per_repo_symb_M",
+    ]
     grouped = results_df.groupby(["language"])
     summary = grouped[metric_list].agg("mean").reset_index()
     print(summary)
