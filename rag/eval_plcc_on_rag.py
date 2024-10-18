@@ -55,40 +55,40 @@ def run_eval_plcc(
     config.output.results_filename = results_filename
     config_rag = config.rag
 
-    generation_engine = VllmEngine(
-        hf_model_path=config.model.model_name_or_path,
-        model_name=config.model.get("model_name"),
-        context_size=max(config.eval.context_size_list),
-        vllm_args=dict(config.vllm.vllm_args),
-        generation_args=dict(config.vllm.generation_args),
-    )
-    evaluator = Evaluator(
-        engine=generation_engine,
-        result_folder=config.output.result_folder,
-        result_filename=config.output.results_filename,
-        # log_model_inputs = config_eval.eval.log_model_inputs,
-        config=config,
-    )
+    # generation_engine = VllmEngine(
+    #     hf_model_path=config.model.model_name_or_path,
+    #     model_name=config.model.get("model_name"),
+    #     context_size=max(config.eval.context_size_list),
+    #     vllm_args=dict(config.vllm.vllm_args),
+    #     generation_args=dict(config.vllm.generation_args),
+    # )
+    # evaluator = Evaluator(
+    #     engine=generation_engine,
+    #     result_folder=config.output.result_folder,
+    #     result_filename=config.output.results_filename,
+    #     # log_model_inputs = config_eval.eval.log_model_inputs,
+    #     config=config,
+    # )
 
     print(40 * "-")
     print(f"Composer - {config.data.composer_name}")
     print(f"Model - {config.model.model_name_or_path}")
 
     # TODO may be make more concise?
-    splitter = get_splitter(config_rag.splitter)
+    splitter = get_splitter(config_rag.splitter, model_name=config_rag.model)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
     chunker = get_chunker(config_rag.chunker)
 
     context_composer = get_composer(
-        config, chunker=scorer, scorer=chunker, config_rag=config.rag
+        config, chunker=chunker, scorer=scorer, config_rag=config.rag
     )
 
     dataloader = get_dataloader(config, context_composer)
-    # from tqdm import tqdm
-    # for item in tqdm(dataloader):
-    #     _ = item
-    # import sys
-    # sys.exit(0)
+    from tqdm import tqdm
+    for item in tqdm(dataloader):
+        _ = item
+    import sys
+    sys.exit(0)
     summary = evaluator.eval(dataloader, limit=limit)
     # TODO fix output filename
     # ammend_summary(config_eval, config_rag)

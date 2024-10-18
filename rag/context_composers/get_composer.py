@@ -1,8 +1,8 @@
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from kotlineval.data.plcc.context_composer import PathDistanceComposer
 
-from from_file_context_composer import FromFileComposer
-from score_chunk_context_composer import ChunkScoreComposer
+from rag.context_composers.from_file_context_composer import FromFileComposer
+from rag.context_composers.score_chunk_context_composer import ChunkScoreComposer
 
 
 def get_composer(config, **kwargs) -> BaseContextComposer:

@@ -1,4 +1,4 @@
-from splitters import BaseSplitter
+from rag.rag_engine.splitters import BaseSplitter
 
 
 class BaseScorer:

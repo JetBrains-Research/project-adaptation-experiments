@@ -1,4 +1,4 @@
-from ..data_loading import ChunkedFile, ChunkedRepo, FileStorage, RepoStorage
+from rag.data_loading import ChunkedFile, ChunkedRepo, FileStorage, RepoStorage
 
 
 class BaseChunker:

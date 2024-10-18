@@ -1,9 +1,9 @@
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from omegaconf import DictConfig, OmegaConf
 
-from chunkers import BaseChunker
-from data_loading import ChunkedRepo, FileStorage, RepoStorage, get_file_and_repo
-from scorers import BaseScorer
+from rag.rag_engine.chunkers import BaseChunker
+from rag.data_loading import ChunkedRepo, FileStorage, RepoStorage, get_file_and_repo
+from rag.rag_engine.scorers import BaseScorer
 
 
 # TODO add others context composers
@@ -13,10 +13,11 @@ class ChunkScoreComposer(BaseContextComposer):
         language: str,
         chunker: BaseChunker,
         scorer: BaseScorer,
-        rag_config: DictConfig,
+        config_rag: DictConfig,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [".md", ".txt", ".rst"],
         completion_categories: list[str] = ["infile", "inproject"],
+        **kwargs,
     ):
         super(ChunkScoreComposer, self).__init__(
             language=language,
@@ -25,19 +26,19 @@ class ChunkScoreComposer(BaseContextComposer):
             completion_categories=completion_categories,
         )
         self.chunk_kwargs = {
-            "chunk_lines_size": rag_config.chunk_lines_size,
-            "overlap_lines_size": rag_config.overlap_lines_size,
+            "chunk_lines_size": config_rag.chunk_lines_size,
+            "overlap_lines_size": config_rag.overlap_lines_size,
         }
-        self.score_model_name = rag_config.model
+        self.score_model_name = config_rag.model
         self.scorer = scorer
         self.chunker = chunker
 
-        self.top_k = rag_config.top_k
-        self.chunk_completion_file = rag_config.chunk_completion_file
+        self.top_k = config_rag.top_k
+        self.chunk_completion_file = config_rag.chunk_completion_file
         if self.chunk_completion_file:
-            self.compl_file_trunc_lines = rag_config.chunk_lines_size
+            self.compl_file_trunc_lines = config_rag.chunk_lines_size
         else:
-            self.compl_file_trunc_lines = rag_config.completion_file_truncate_lines
+            self.compl_file_trunc_lines = config_rag.completion_file_truncate_lines
         self.last_completion_chunk = None
 
     @staticmethod
@@ -64,7 +65,7 @@ class ChunkScoreComposer(BaseContextComposer):
                 filename=completion_item["filename"], content=completion_item["prefix"]
             )
         # chunk repo
-        chunked_repo = self.chunker(repo_snapshot, **self.chunk_kwargs)
+        chunked_repo = self.chunker(repo_snapshot)
 
         # save last chunk of completion prefix or just completion prefix
         self.last_chunk = FileStorage(
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     rag_config = OmegaConf.load("rag_config.yaml")
     iou_scorer = IOUChunkScorer(model_name=rag_config.model)
     score_composer = ChunkScoreComposer(
-        lang_extensions=[".py"], rag_config=rag_config, scorer=iou_scorer
+        lang_extensions=[".py"], config_rag=rag_config, scorer=iou_scorer
     )
 
     from datasets import load_dataset
