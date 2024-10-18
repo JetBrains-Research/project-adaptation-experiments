@@ -1,5 +1,6 @@
 from rag.data_loading import ChunkedFile, ChunkedRepo, FileStorage, RepoStorage
 
+
 class BaseChunker:
 
     def __init__(self, **kwargs):

@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer
 import re
 
+
 class BaseSplitter:
     def __init__(self, **kwargs):
         pass
@@ -16,6 +17,7 @@ class ModelSplitter(BaseSplitter):
 
     def __call__(self, string: str) -> list[int]:
         return self.tokenizer.encode(string)
+
 
 class WordSplitter(BaseSplitter):
 
@@ -45,7 +47,5 @@ def get_splitter(name: str, **kwargs) -> BaseSplitter:
         raise ValueError(
             f"There is no {name} splitter. Only [model_tokenizer, line_splitter, word_splitter] are available"
         )
-
-
 
     return splitter
