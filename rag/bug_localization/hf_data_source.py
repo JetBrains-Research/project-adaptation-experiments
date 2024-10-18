@@ -5,8 +5,8 @@ from typing import Optional
 import huggingface_hub
 from datasets import load_dataset
 from huggingface_hub import hf_hub_download
-from rag_experiments.bug_localization.ds_features import FEATURES, HUGGINGFACE_REPO
-from rag_experiments.bug_localization.git_functions import (
+from rag.bug_localization.ds_features import FEATURES, HUGGINGFACE_REPO
+from rag.bug_localization.git_functions import (
     get_changed_files_between_commits,
     get_repo_content_on_commit,
 )

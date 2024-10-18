@@ -1,10 +1,9 @@
 import time
 from tqdm import tqdm
-from rag_experiments.bug_localization.bpe_tokenizer import BPETokenizer
-from rag_experiments.bug_localization.cosine_distance_ranker import CosineDistanceRanker
-from rag_experiments.bug_localization.tfidf_backbone import TfIdfEmbBackbone
-from rag_experiments.bug_localization.load_data import load_data
-from dotenv import load_dotenv
+from rag.bug_localization.bpe_tokenizer import BPETokenizer
+from rag.bug_localization.cosine_distance_ranker import CosineDistanceRanker
+from rag.bug_localization.tfidf_backbone import TfIdfEmbBackbone
+from rag.bug_localization.load_data import load_data
 
 # %%
 tokenizer = BPETokenizer(vocab_size=10000, min_frequency=2, pretrained_path=None)
