@@ -1,4 +1,7 @@
 from pathlib import Path
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import jsonlines
 import pandas as pd
@@ -55,20 +58,20 @@ def run_eval_plcc(
     config.output.results_filename = results_filename
     config_rag = config.rag
 
-    # generation_engine = VllmEngine(
-    #     hf_model_path=config.model.model_name_or_path,
-    #     model_name=config.model.get("model_name"),
-    #     context_size=max(config.eval.context_size_list),
-    #     vllm_args=dict(config.vllm.vllm_args),
-    #     generation_args=dict(config.vllm.generation_args),
-    # )
-    # evaluator = Evaluator(
-    #     engine=generation_engine,
-    #     result_folder=config.output.result_folder,
-    #     result_filename=config.output.results_filename,
-    #     # log_model_inputs = config_eval.eval.log_model_inputs,
-    #     config=config,
-    # )
+    generation_engine = VllmEngine(
+        hf_model_path=config.model.model_name_or_path,
+        model_name=config.model.get("model_name"),
+        context_size=max(config.eval.context_size_list),
+        vllm_args=dict(config.vllm.vllm_args),
+        generation_args=dict(config.vllm.generation_args),
+    )
+    evaluator = Evaluator(
+        engine=generation_engine,
+        result_folder=config.output.result_folder,
+        result_filename=config.output.results_filename,
+        # log_model_inputs = config_eval.eval.log_model_inputs,
+        config=config,
+    )
 
     print(40 * "-")
     print(f"Composer - {config.data.composer_name}")
