@@ -79,7 +79,7 @@ def run_benchmark(limit=-1) -> pd.DataFrame:
         )
         item_copy = item.copy()
         del item_copy["repo_content"]
-        item_copy["time_s"] = (end_time - start_time) * 1000000
+        item_copy["time_s"] = end_time - start_time
         item_copy["scores"] = scoring_res
         results_ds.append(item_copy)
         i += 1
@@ -88,17 +88,22 @@ def run_benchmark(limit=-1) -> pd.DataFrame:
 
     results_df = pd.DataFrame(results_ds)
 
+    results_df["repo_symbols_count_M"] = results_df["repo_symbols_count"]/1e6
+    results_df["time_per_repo_symb_M"] = results_df["time_s"] / results_df["repo_symbols_count_M"]
     results_df["oracle_selected"] = results_df.apply(select_files, axis=1)
     results_df["f1"] = results_df.apply(f1_by_row, axis=1)
     print(f"Mean f1 = {results_df['f1'].mean()}")
+    print(f"Average time per repo million token = {results_df['time_per_repo_symb_M'].mean()}")
+
+    metric_list = ["f1", "time_s", "repo_symbols_count_M", "time_per_repo_symb_M"]
+    grouped = results_df.groupby(["language"])
+    summary = grouped[metric_list].agg("mean").reset_index()
+    print(summary)
 
     results_df.to_json(output_folder / "results.jsonl", orient="records", lines=True)
+    summary.to_json(output_folder / "results_summary.jsonl", orient="records", lines=True)
 
     return results_df
 
-
-results_df = run_benchmark(limit=10)
-
-results = results_df[["oracle_selected", "changed_files", "f1"]]
-
-pass
+#%%
+results_df = run_benchmark(limit=-1)
