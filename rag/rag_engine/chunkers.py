@@ -44,7 +44,7 @@ class FixedLineChunker(BaseChunker):
             start_idx = max(0, i - self.chunk_lines_size)
             chunks.append("\n".join(lines[start_idx:i]))
         if total_lines % stride != 0:
-            chunks.append("\n".join(lines[:self.chunk_lines_size]))
+            chunks.append("\n".join(lines[: self.chunk_lines_size]))
         chunks = chunks[::-1]
 
         return ChunkedFile(file_st.filename, chunks)

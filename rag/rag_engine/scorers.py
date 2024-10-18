@@ -1,4 +1,5 @@
 from rag.rag_engine.splitters import BaseSplitter
+from rag.data_loading import ChunkedRepo
 
 
 class BaseScorer:
@@ -8,7 +9,9 @@ class BaseScorer:
     def score(self, list1: list[str | int], list2: list[str | int]):
         return 0
 
-    def __call__(self, completion_prefix: str, chunked_repo):
+    def score_repo(
+        self, completion_prefix: str, chunked_repo: ChunkedRepo
+    ) -> ChunkedRepo:
         scores = list()
         completion_split = self.splitter(completion_prefix)
 
@@ -23,12 +26,43 @@ class BaseScorer:
         chunked_repo.set_scores(scores)
         return chunked_repo
 
+    def score_dict(self, query: str, docs: dict[str, str]) -> dict[str, dict]:
+
+        scored_docs = dict()
+        for doc_name, doc in docs.items():
+            query_split = self.splitter(query)
+            doc_split = self.splitter(doc)
+            score = self.score(query_split, doc_split)
+            scored_docs[doc_name] = {"doc": doc, "score": score}
+
+        return scored_docs
+
+    def __call__(
+        self, completion_prefix: str, docs: ChunkedRepo | dict
+    ) -> ChunkedRepo | dict:
+
+        if isinstance(docs, ChunkedRepo):
+            scored_results = self.score_repo(completion_prefix, docs)
+        elif isinstance(docs, dict):
+            scored_results = self.score_dict(completion_prefix, docs)
+        else:
+            raise TypeError(
+                f"Expected 'chunked_repo' to be an instance of ChunkedRepo or dict, got {type(docs).__name__} instead."
+            )
+
+        return scored_results
+
 
 class IOUScorer(BaseScorer):
     def __init__(self, splitter: BaseSplitter):
         super(IOUScorer, self).__init__(splitter)
 
     def score(self, list1: list[str | int], list2: list[str | int]):
+
+        assert isinstance(list1, (list, set, tuple)) and isinstance(
+            list2, (list, set, tuple)
+        ), "Passed lists are not a list, tuple, or set"
+
         set1 = set(list1)
         set2 = set(list2)
 

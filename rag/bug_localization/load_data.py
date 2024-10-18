@@ -10,7 +10,7 @@ def load_data(languages: list[str]) -> list[dict]:
             repo_id="galtimur/lca-bug-localization-test",
             filename=f"dataset/{lang}.jsonl",
             repo_type="dataset",
-            force_download=True
+            force_download=True,
         )
         with jsonlines.open(data_file) as reader:
             data = list(reader)

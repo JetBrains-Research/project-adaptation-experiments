@@ -85,9 +85,11 @@ def run_eval_plcc(
 
     dataloader = get_dataloader(config, context_composer)
     from tqdm import tqdm
+
     for item in tqdm(dataloader):
         _ = item
     import sys
+
     sys.exit(0)
     summary = evaluator.eval(dataloader, limit=limit)
     # TODO fix output filename
