@@ -52,11 +52,13 @@ class FixedLineChunker(BaseChunker):
 
 def get_chunker(name: str, **kwargs) -> BaseChunker:
     chunker = None
-    available_instances = ["fixed_line"]
+    available_instances = ["fixed_line", "full_file"]
     if name not in available_instances:
         raise ValueError(
             f"There is no {name} splitter. Only {available_instances} are available"
         )
-    if name == "fixed_line":
+    if name == "full_file":
+        chunker = BaseChunker(**kwargs)
+    elif name == "fixed_line":
         chunker = FixedLineChunker(**kwargs)
     return chunker
