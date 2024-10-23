@@ -1,10 +1,5 @@
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
-from collections import Counter
-from tqdm.auto import tqdm
-from scipy.sparse import csr_matrix, diags
-from scipy.sparse.linalg import norm
-import numpy as np
 
 class BaseScorer:
     def __init__(self, splitter: BaseSplitter):

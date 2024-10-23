@@ -4,8 +4,6 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import jsonlines
-import pandas as pd
 from fire import Fire
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.eval.plcc.evaluator import Evaluator
@@ -20,27 +18,6 @@ from rag_engine.splitters import get_splitter
 """
 CUDA_VISIBLE_DEVICES=0 python3 eval_plcc_on_rag.py --limit 10
 """
-
-
-def ammend_summary(config_eval, config_rag):
-
-    summary_file = (
-        Path(config_eval.output.result_folder) / config_eval.output.results_filename
-    )
-
-    records = []
-    with jsonlines.open(summary_file) as reader:
-        for record in reader:
-            last_record = record
-            records.append(record)
-
-    summary = pd.DataFrame(last_record)
-    config_rag_dict = OmegaConf.to_container(config_rag)
-    summary["config_rag"] = len(summary) * [config_rag_dict]
-    records[-1] = summary.to_dict()
-
-    with jsonlines.open(summary_file, mode="w") as writer:
-        writer.write_all(records)
 
 
 def run_eval_plcc(

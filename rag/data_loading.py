@@ -1,11 +1,6 @@
 from dataclasses import dataclass
 from typing import Iterator
 from rag.rag_engine.splitters import BaseSplitter
-from collections import Counter
-from tqdm.auto import tqdm
-from scipy.sparse import csr_matrix, diags
-from scipy.sparse.linalg import norm
-import numpy as np
 from rank_bm25 import BM25Okapi
 import rank_bm25
 
