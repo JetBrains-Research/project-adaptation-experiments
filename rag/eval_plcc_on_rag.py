@@ -18,9 +18,7 @@ from rag_engine.scorers import get_scorer
 from rag_engine.splitters import get_splitter
 
 """
-CUDA_VISIBLE_DEVICES=4 python3 eval_on_rag.py --eval_config_path config_plcc.yaml \
-                                              --rag_config_path rag_config.yaml \
-                                              --limit 10
+CUDA_VISIBLE_DEVICES=0 python3 eval_plcc_on_rag.py --limit 10
 """
 
 
@@ -94,8 +92,9 @@ def run_eval_plcc(
         _ = item
     import sys
 
-    sys.exit(0)
+    # sys.exit(0)
     summary = evaluator.eval(dataloader, limit=limit)
+    print(summary)
     # TODO fix output filename
     # ammend_summary(config_eval, config_rag)
 
