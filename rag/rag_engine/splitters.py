@@ -17,7 +17,7 @@ class ModelSplitter(BaseSplitter):
         self.tokenizer.truncation_side = "left"
 
     def __call__(self, string: str) -> list[int]:
-        # Remove <BOS> and <EOS> tokens
+
         return self.tokenizer.encode(string)[1:-1]
 
 

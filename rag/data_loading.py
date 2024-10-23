@@ -6,7 +6,8 @@ from tqdm.auto import tqdm
 from scipy.sparse import csr_matrix, diags
 from scipy.sparse.linalg import norm
 import numpy as np
-
+from rank_bm25 import BM25Okapi
+import rank_bm25
 
 @dataclass
 class FileStorage:
@@ -120,7 +121,7 @@ class ChunkedFile:
 
 @dataclass
 class ChunkedRepo:
-    tfidf: np.ndarray | None = None
+    bm25: rank_bm25.BM25Okapi | None = None
     chunks: list[Chunk] | None = None
 
     def __post_init__(self):
@@ -150,51 +151,13 @@ class ChunkedRepo:
         sorted_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
         return ChunkedRepo(sorted_chunks[:k])
 
-    def get_tfidf(self, splitter: BaseSplitter):
-        self.docs_counters = self._get_docs_counters(splitter)
-        self.vocab = self._get_vocab(self.docs_counters)
-
-        self.vocab_index = {token: idx for idx, token in enumerate(self.vocab)}
-        self.n_docs = len(self.chunks)
-
-        self._fit()
-
-    def _get_docs_counters(self, splitter) -> list[Counter]:
-        docs_counters = list()
+    def get_bm25(self, splitter: BaseSplitter):
+        docs_split = list()
 
         for doc in self.chunks:
-            doc.content_token = splitter(doc.content)
-            docs_counters.append(Counter(doc.content_token))
+            docs_split.append(splitter(doc.content))
 
-        return docs_counters
-    
-    def _get_vocab(self, docs_counters: list[Counter]):
-        vocab = Counter()
-        for doc in docs_counters:
-            vocab.update(doc)
-
-        return [*vocab]
-        
-    def _fit(self):
-        rows, cols, data = [], [], []
-        
-        for doc_idx, document in enumerate(tqdm(self.docs_counters)):
-            for token, value in document.items():
-                if token in self.vocab_index:
-                    rows.append(doc_idx)
-                    cols.append(self.vocab_index[token])
-                    data.append(value)
-        
-        tf = csr_matrix((data, (rows, cols)), shape=(self.n_docs, len(self.vocab)))
-
-        df = np.bincount(tf.indices, minlength=len(self.vocab)) + 1e-7
-        
-        self.idf = np.log(self.n_docs / df) + 1
-        self.idf = diags(self.idf)
-        
-        self.tfidf = tf.dot(self.idf)
-        self.doc_norms = norm(self.tfidf, axis=1)
-        self.doc_norms = np.where(self.doc_norms == 0, 1, self.doc_norms)
+        self.bm25 = BM25Okapi(docs_split)
 
 
 def map_dp_to_dataclass(dp) -> RepoStorage:
