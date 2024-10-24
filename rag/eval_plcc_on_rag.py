@@ -36,11 +36,12 @@ def run_eval_plcc(config: DictConfig):
         print("Skipping this configuration")
         return None
 
+    vllm_args = dict(config.vllm.vllm_args) if config.vllm.vllm_args is not None else {}
     generation_engine = VllmEngine(
         hf_model_path=config.model.model_name_or_path,
         model_name=config.model.get("model_name"),
         context_size=max(config.eval.context_size_list),
-        vllm_args=dict(config.vllm.vllm_args),
+        vllm_args=vllm_args,
         generation_args=dict(config.vllm.generation_args),
     )
     evaluator = Evaluator(
@@ -77,8 +78,7 @@ def run_eval_plcc(config: DictConfig):
     # sys.exit(0)
 
     summary = evaluator.eval(dataloader, limit=config.limit)
-    print(summary)
-    time.sleep(10)
+    time.sleep(5)
 
 
 if __name__ == "__main__":
