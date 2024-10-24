@@ -21,6 +21,7 @@ from configs.exclusion import exclusion
 CUDA_VISIBLE_DEVICES=0 python3 eval_plcc_on_rag.py --limit 10
 """
 
+# TODO rename file
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def run_eval_plcc(config: DictConfig):
 
@@ -67,11 +68,11 @@ def run_eval_plcc(config: DictConfig):
 
     dataloader = get_dataloader(config, context_composer)
 
-    from tqdm import tqdm
-    for item in tqdm(dataloader):
-        _ = item
-    import sys
-    sys.exit(0)
+    # from tqdm import tqdm
+    # for item in tqdm(dataloader):
+    #     _ = item
+    # import sys
+    # sys.exit(0)
 
     summary = evaluator.eval(dataloader, limit=config.limit)
     print(summary)
