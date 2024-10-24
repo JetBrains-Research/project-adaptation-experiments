@@ -1,18 +1,18 @@
 output:
-  result_folder: "/mnt/data2/galimzyanov/long-contex-eval/output/rag/"
+  result_folder: "/mnt/data/kolomuttseva/rag"
   results_filename: "results_dev.jsonl"
 data:
   language: "python" # "python", "kotlin"
   dataset_name: null
   # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "from_file", "no_context", "kl_chunk_score"]
-  composer_name: "iou_chunk_score"
+  composer_name: "chunk_score"
   topk: -1
   composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
   # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
   # Eligible scopes: ["medium_context", "large_context", "huge_context"]
   # do not use "small_context"
   context_scopes: ["medium_context"]
-  completion_categories: ["infile", "inproject"]#"infile", "inproject"
+  completion_categories: ["infile", "inproject"] #"infile", "inproject"
   # time_scopes: ["after_year2022", "before_year2022"]
   filter_extensions: true
   # Only those extentions would be added to the context
@@ -31,9 +31,9 @@ model:
 use_vllm: True
 vllm:
   vllm_args:
-     download_dir: /mnt/data2/tmp
+     download_dir: null #/mnt/data2/tmp
      # max_model_len: 512
-     gpu_memory_utilization: 0.15
+    #  gpu_memory_utilization: 0.15
   generation_args:
     temperature: 0.0
     max_tokens: 100
@@ -55,5 +55,9 @@ rag:
   iou_file_type: "by_token"
   top_k: 13
   splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
-  scorer: "iou"
+  scorer: "bm25"
   chunker: "full_file" #["full_file", "fixed_line"]
+  use_n_grams: true
+  # n_grams: 10
+  n_grams_min: 2
+  n_grams_max: 10
