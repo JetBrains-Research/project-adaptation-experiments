@@ -34,6 +34,7 @@ class BaseSplitter:
 
 class ModelSplitter(BaseSplitter):
     def __init__(self, model_name: str, **kwargs):
+        super().__init__(**kwargs)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.tokenizer.truncation_side = "left"
 
