@@ -46,18 +46,3 @@ eval:
   context_size_list: [256, 512] # [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
   # max_new_tokens: 100
   log_model_inputs: false
-rag:
-  model: "deepseek-ai/deepseek-coder-1.3b-base"
-  chunk_lines_size: 64
-  overlap_lines_size: 8
-  completion_file_truncate_lines: 64
-  chunk_completion_file: True
-  iou_file_type: "by_token"
-  top_k: 13
-  splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
-  scorer: "bm25"
-  chunker: "full_file" #["full_file", "fixed_line"]
-  use_n_grams: true
-  # n_grams: 10
-  n_grams_min: 2
-  n_grams_max: 10

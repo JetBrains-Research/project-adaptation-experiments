@@ -5,14 +5,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 from pathlib import Path
 
+import hydra
 import pandas as pd
-from omegaconf import OmegaConf
+from omegaconf import DictConfig
 from tqdm import tqdm
 
 from rag.bug_localization.load_data import load_data
 from rag.metrics.metrics import calc_f1, calc_ndcg
 from rag.rag_engine.scorers import get_scorer
 from rag.rag_engine.splitters import get_splitter
+from configs.exclusion import exclusion
 
 
 def select_files(row: pd.Series) -> list[str]:
@@ -41,20 +43,27 @@ def ndcg_by_row(row: pd.Series) -> float:
 
     return f1
 
+# TODO refactor
 
-def run_benchmark(limit=-1) -> pd.DataFrame:
+@hydra.main(version_base=None, config_path="configs", config_name="config")
+def run_benchmark(config: DictConfig) -> pd.DataFrame:
 
     output_folder = Path(
-        "/mnt/data2/galimzyanov/long-contex-eval/output/bug_localization/"
+        "/mnt/data/galimzyanov/long-contex-eval/output/bug_localization/"
     )
-    config_path = "configs/config_plcc.yaml"
-    config = OmegaConf.load(config_path)
     config_rag = config.rag
 
     splitter = get_splitter(config_rag.splitter, model_name=config_rag.model)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
     dataset = load_data(["python", "java", "kotlin"])
     results_ds = list()
+    limit = config.limit
+
+    if exclusion(config.rag.scorer, config.rag.splitter, config.rag.n_grams_max):
+        print("Skipping this configuration")
+        return None
+
+    # print(f"{splitter}, {scorer}, {n_grams_max}")
 
     i = 1
     for item in tqdm(dataset):
@@ -119,6 +128,7 @@ def run_benchmark(limit=-1) -> pd.DataFrame:
 
 # TODO some (3) repos contain 1 or 2 files. Investigate!
 # %%
-results_df = run_benchmark(limit=-1)
+if __name__ == "__main__":
+    run_benchmark()
 # output_folder = Path("/mnt/data2/galimzyanov/long-contex-eval/output/bug_localization/")
 # results_df = pd.read_json(output_folder/'results_word_splitter.jsonl', orient='records', lines=True)

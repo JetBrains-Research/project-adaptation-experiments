@@ -4,35 +4,34 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fire import Fire
+import time
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
-from omegaconf import OmegaConf
+import hydra
+from omegaconf import DictConfig
 
 from context_composers.get_composer import get_composer
 from rag_engine.chunkers import get_chunker
 from rag_engine.scorers import get_scorer
 from rag_engine.splitters import get_splitter
+from configs.exclusion import exclusion
 
 """
 CUDA_VISIBLE_DEVICES=0 python3 eval_plcc_on_rag.py --limit 10
 """
 
+@hydra.main(version_base=None, config_path="configs", config_name="config")
+def run_eval_plcc(config: DictConfig):
 
-def run_eval_plcc(
-    config_path: str = "configs/config_plcc.yaml", limit: int = -1
-) -> None:
-    """
-    eval_config_path: str
-        Path to yaml config
-    limit: int
-        Number of batches in dataloader
-    """
-    config = OmegaConf.load(config_path)
+    # You can pass limit argument in the cmd line
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
     config_rag = config.rag
+
+    if exclusion(config_rag.scorer, config_rag.splitter, config_rag.n_grams_max):
+        print("Skipping this configuration")
+        return None
 
     generation_engine = VllmEngine(
         hf_model_path=config.model.model_name_or_path,
@@ -45,7 +44,7 @@ def run_eval_plcc(
         engine=generation_engine,
         result_folder=config.output.result_folder,
         result_filename=config.output.results_filename,
-        # log_model_inputs = config_eval.eval.log_model_inputs,
+        log_model_inputs = config.eval.log_model_inputs,
         config=config,
     )
 
@@ -54,9 +53,9 @@ def run_eval_plcc(
     print(f"Model - {config.model.model_name_or_path}")
 
     # TODO may be make more concise?
-    splitter = get_splitter(config_rag.splitter, 
-                            model_name=config_rag.model, 
-                            use_n_grams=config_rag.use_n_grams, 
+    splitter = get_splitter(config_rag.splitter,
+                            model_name=config_rag.model,
+                            use_n_grams=config_rag.use_n_grams,
                             n_grams_min=config_rag.n_grams_min,
                             n_grams_max=config_rag.n_grams_max)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
@@ -67,18 +66,17 @@ def run_eval_plcc(
     )
 
     dataloader = get_dataloader(config, context_composer)
-    from tqdm import tqdm
 
+    from tqdm import tqdm
     for item in tqdm(dataloader):
         _ = item
     import sys
+    sys.exit(0)
 
-    # sys.exit(0)
-    summary = evaluator.eval(dataloader, limit=limit)
+    summary = evaluator.eval(dataloader, limit=config.limit)
     print(summary)
-    # TODO fix output filename
-    # ammend_summary(config_eval, config_rag)
+    time.sleep(1)
 
 
 if __name__ == "__main__":
-    Fire(run_eval_plcc)
+    run_eval_plcc()
