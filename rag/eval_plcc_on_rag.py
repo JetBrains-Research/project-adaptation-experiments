@@ -26,6 +26,8 @@ CUDA_VISIBLE_DEVICES=0 python3 eval_plcc_on_rag.py --limit 10
 def run_eval_plcc(config: DictConfig):
 
     # You can pass limit argument in the cmd line
+    # python eval_plcc_on_rag.py limit=15
+
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
     config_rag = config.rag

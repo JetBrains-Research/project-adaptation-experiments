@@ -17,5 +17,6 @@ def main(config: DictConfig):
     print(f"{scorer}, {splitter}, {n_grams_max}")
 
 if __name__ == "__main__":
-    # You can pass limit argument in the cmd line
+    # You can pass limit argument in the cmd line:
+    # python try_hydra.py limit=15
     main()
