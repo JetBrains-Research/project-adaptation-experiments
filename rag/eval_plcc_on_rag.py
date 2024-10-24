@@ -76,7 +76,7 @@ def run_eval_plcc(config: DictConfig):
 
     summary = evaluator.eval(dataloader, limit=config.limit)
     print(summary)
-    time.sleep(1)
+    time.sleep(10)
 
 
 if __name__ == "__main__":
