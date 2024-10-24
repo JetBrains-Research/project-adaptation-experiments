@@ -7,8 +7,8 @@ data:
   # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "from_file", "no_context", "kl_chunk_score"]
   composer_name: "chunk_score"
   topk: -1
-  composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
-  # composer_dataset_file: "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
+  # composer_dataset_file: "/mnt/data/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
+  # composer_dataset_file: "/mnt/data/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
   # Eligible scopes: ["medium_context", "large_context", "huge_context"]
   # do not use "small_context"
   context_scopes: ["medium_context"]
@@ -31,7 +31,6 @@ model:
 use_vllm: True
 vllm:
   vllm_args:
-     download_dir: null #/mnt/data2/tmp
      # max_model_len: 512
     #  gpu_memory_utilization: 0.15
   generation_args:
@@ -42,7 +41,7 @@ vllm:
     stop: ["\n"]
 eval:
   # For VLLM this value can be arbitrary large, since it batches the items inside
-  batch_size: 20
-  context_size_list: [256, 512] # [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
+  batch_size: 40
+  context_size_list: [16256] # [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16256] # 16256 = 16384 - 128
   # max_new_tokens: 100
   log_model_inputs: false
