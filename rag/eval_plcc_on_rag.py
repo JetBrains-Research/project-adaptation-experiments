@@ -77,7 +77,11 @@ def run_eval_plcc(
     print(f"Model - {config.model.model_name_or_path}")
 
     # TODO may be make more concise?
-    splitter = get_splitter(config_rag.splitter, model_name=config_rag.model, use_n_grams=config_rag.use_n_grams, n_grams=config_rag.n_grams)
+    splitter = get_splitter(config_rag.splitter, 
+                            model_name=config_rag.model, 
+                            use_n_grams=config_rag.use_n_grams, 
+                            n_grams_min=config_rag.n_grams_min,
+                            n_grams_max=config_rag.n_grams_max)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
     chunker = get_chunker(config_rag.chunker)
 
