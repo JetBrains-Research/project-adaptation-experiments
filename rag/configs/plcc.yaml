@@ -1,5 +1,5 @@
 output:
-  result_folder: "/mnt/data/kolomuttseva/rag"
+  result_folder: "/mnt/data/galimzyanov/long-contex-eval/output/rag/dev"
   results_filename: "results_dev.jsonl"
 data:
   language: "python" # "python", "kotlin"

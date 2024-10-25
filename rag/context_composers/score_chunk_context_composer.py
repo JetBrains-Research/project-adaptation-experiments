@@ -89,28 +89,27 @@ class ChunkScoreComposer(BaseContextComposer):
             chunked_repo = self._get_chunks(repo_snapshot)
             cached_repo = {"cached_repo": chunked_repo}
 
+        self.completion_chunk = FileStorage(
+            filename=completion_item["filename"], content=completion_item["prefix"]
+        )
         # TODO add completion chunking
-        completion_snapshot = RepoStorage(list(), list())
         if self.chunk_completion_file:
+            completion_snapshot = RepoStorage(list(), list())
             completion_snapshot.add_item(
                 filename=completion_item["filename"], content=completion_item["prefix"]
             )
-        chunked_completion = self._get_chunks(completion_snapshot)
+            chunked_completion = self._get_chunks(completion_snapshot)
             
-        # save last chunk of completion prefix or just completion prefix
-        self.last_chunk = FileStorage(
-            filename=completion_item["filename"], content=completion_item["prefix"]
-        )
-        if self.chunk_completion_file:
-            self.last_chunk = chunked_completion.chunks.pop()
-            self.last_chunk = FileStorage(
-                filename=self.last_chunk.filename, content=self.last_chunk.content
+            # save last chunk of completion prefix or just completion prefix
+            self.completion_chunk = chunked_completion.chunks.pop()
+            self.completion_chunk = FileStorage(
+                filename=self.completion_chunk.filename, content=self.completion_chunk.content
             )
 
         # TODO merge chunked_repo and chunked_completion
-            
+        # TODO. Here we should be able to pass other amount from completion_chunk, not only last chunk
         scored_chunked_repo = self._score_chunks(
-            completion_item["prefix"], chunked_repo
+            self.completion_chunk.content, chunked_repo
         )
         context = self.merge_chunks(scored_chunked_repo)
 
@@ -123,7 +122,7 @@ class ChunkScoreComposer(BaseContextComposer):
         context, cached_repo = self.context_composer(datapoint, line_index, cached_repo)
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
-            self.last_chunk.filename + "\n\n" + self.last_chunk.content.strip() + "\n"
+                self.completion_chunk.filename + "\n\n" + self.completion_chunk.content.strip() + "\n"
         )
         full_context = context + "\n\n" + completion_context
         completion_item["full_context"] = full_context
@@ -133,25 +132,25 @@ class ChunkScoreComposer(BaseContextComposer):
 
 if __name__ == "__main__":
 
-    from iou_chunk_scorer import IOUChunkScorer
-
-    rag_config = OmegaConf.load("rag_config.yaml")
-    iou_scorer = IOUChunkScorer(model_name=rag_config.model)
-    score_composer = ChunkScoreComposer(
-        lang_extensions=[".py"], config_rag=rag_config, scorer=iou_scorer
-    )
-
-    from datasets import load_dataset
-
-    ds = load_dataset(
-        "JetBrains-Research/lca-project-level-code-completion",
-        "medium_context",
-        split="test",
-    )
-    datapoint = ds[0]
-    line_index = datapoint["completion_lines"]["inproject"][0]
-
-    dp_context = score_composer.context_and_completion_composer(
-        datapoint, line_index=line_index
-    )
+    # from iou_chunk_scorer import IOUChunkScorer
+    #
+    # rag_config = OmegaConf.load("rag_config.yaml")
+    # iou_scorer = IOUChunkScorer(model_name=rag_config.model)
+    # score_composer = ChunkScoreComposer(
+    #     lang_extensions=[".py"], config_rag=rag_config, scorer=iou_scorer
+    # )
+    #
+    # from datasets import load_dataset
+    #
+    # ds = load_dataset(
+    #     "JetBrains-Research/lca-project-level-code-completion",
+    #     "medium_context",
+    #     split="test",
+    # )
+    # datapoint = ds[0]
+    # line_index = datapoint["completion_lines"]["inproject"][0]
+    #
+    # dp_context = score_composer.context_and_completion_composer(
+    #     datapoint, line_index=line_index
+    # )
     pass
