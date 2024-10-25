@@ -36,6 +36,16 @@ def run_eval_plcc(config: DictConfig):
         print("Skipping this configuration")
         return None
 
+    run_info = {"language": config.data.language,
+                "model": config.model.model_name_or_path,
+                "composer": config.data.composer_name,
+                "scorer": config_rag.scorer,
+                "splitter": config_rag.splitter,
+                "chunker": config_rag.chunker,
+                "use_n_grams": config_rag.use_n_grams,
+                "n_grams_max": config_rag.n_grams_max,
+                "n_grams_min": config_rag.n_grams_min}
+
     vllm_args = dict(config.vllm.vllm_args) if config.vllm.vllm_args is not None else {}
     generation_engine = VllmEngine(
         hf_model_path=config.model.model_name_or_path,
@@ -50,6 +60,7 @@ def run_eval_plcc(config: DictConfig):
         result_filename=config.output.results_filename,
         log_model_inputs = config.eval.log_model_inputs,
         config=config,
+        run_info=run_info
     )
 
     print(40 * "-")
