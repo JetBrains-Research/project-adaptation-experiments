@@ -56,28 +56,13 @@ class ChunkScoreComposer(BaseContextComposer):
         return "\n".join(context_lines[::-1])
 
     def _get_chunks(
-        self, completion_item: dict[str, str], repo_snapshot: RepoStorage
+        self, repo_snapshot: RepoStorage
     ) -> ChunkedRepo:
         # filter repo
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
 
-        # add completion part to repo
-        if self.chunk_completion_file:
-            repo_snapshot.add_item(
-                filename=completion_item["filename"], content=completion_item["prefix"]
-            )
         # chunk repo
         chunked_repo = self.chunker(repo_snapshot)
-
-        # save last chunk of completion prefix or just completion prefix
-        self.last_chunk = FileStorage(
-            filename=completion_item["filename"], content=completion_item["prefix"]
-        )
-        if self.chunk_completion_file:
-            self.last_chunk = chunked_repo.chunks.pop()
-            self.last_chunk = FileStorage(
-                filename=self.last_chunk.filename, content=self.last_chunk.content
-            )
 
         return chunked_repo
 
@@ -98,13 +83,32 @@ class ChunkScoreComposer(BaseContextComposer):
         # TODO get completion file before gt line
         completion_item = self.completion_composer(datapoint, line_index)
 
-        # TODO fix cached repo
         if cached_repo is not None:
             chunked_repo = cached_repo["cached_repo"]
         else:
-            chunked_repo = self._get_chunks(completion_item, repo_snapshot)
+            chunked_repo = self._get_chunks(repo_snapshot)
             cached_repo = {"cached_repo": chunked_repo}
 
+        # TODO add completion chunking
+        completion_snapshot = RepoStorage(list(), list())
+        if self.chunk_completion_file:
+            completion_snapshot.add_item(
+                filename=completion_item["filename"], content=completion_item["prefix"]
+            )
+        chunked_completion = self._get_chunks(completion_snapshot)
+            
+        # save last chunk of completion prefix or just completion prefix
+        self.last_chunk = FileStorage(
+            filename=completion_item["filename"], content=completion_item["prefix"]
+        )
+        if self.chunk_completion_file:
+            self.last_chunk = chunked_completion.chunks.pop()
+            self.last_chunk = FileStorage(
+                filename=self.last_chunk.filename, content=self.last_chunk.content
+            )
+
+        # TODO merge chunked_repo and chunked_completion
+            
         scored_chunked_repo = self._score_chunks(
             completion_item["prefix"], chunked_repo
         )
