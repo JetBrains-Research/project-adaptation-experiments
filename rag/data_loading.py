@@ -116,8 +116,8 @@ class ChunkedFile:
 
 @dataclass
 class ChunkedRepo:
-    bm25: rank_bm25.BM25Okapi | None = None
     chunks: list[Chunk] | None = None
+    bm25: rank_bm25.BM25Okapi | None = None
 
     def __post_init__(self):
         if self.chunks is None:
@@ -135,6 +135,9 @@ class ChunkedRepo:
     def __len__(self):
         return len(self.chunks)
 
+    def get_scores(self) -> list[float]:
+        return [chunk.score for chunk in self.chunks]
+
     def set_scores(self, scores: list[float]):
         if len(scores) != len(self.chunks):
             raise ValueError("Scores must correspond to chunks")
@@ -144,7 +147,7 @@ class ChunkedRepo:
     def top_k(self, k: int = 10) -> "ChunkedRepo":
         chunks = self.chunks
         sorted_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
-        return ChunkedRepo(sorted_chunks[:k])
+        return ChunkedRepo(chunks=sorted_chunks[:k])
 
     def get_bm25(self, splitter: BaseSplitter):
         docs_split = list()

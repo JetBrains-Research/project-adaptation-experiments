@@ -18,7 +18,7 @@ from rag_engine.splitters import get_splitter
 from configs.exclusion import exclusion
 
 """
-CUDA_VISIBLE_DEVICES=0 python3 eval_plcc_on_rag.py --limit 10
+CUDA_VISIBLE_DEVICES=1 python3 eval_plcc_on_rag.py limit=4
 """
 
 # TODO rename file
@@ -55,6 +55,12 @@ def run_eval_plcc(config: DictConfig):
     print(40 * "-")
     print(f"Composer - {config.data.composer_name}")
     print(f"Model - {config.model.model_name_or_path}")
+    print(f"Scorer - {config_rag.scorer}")
+    print(f"Splitter - {config_rag.splitter}")
+    print(f"Chunker - {config_rag.chunker}")
+    print(f"use_n_grams - {config_rag.use_n_grams}")
+    if config_rag.use_n_grams:
+        print(f"n_grams_max - {config_rag.n_grams_max}")
 
     # TODO may be make more concise?
     splitter = get_splitter(config_rag.splitter,

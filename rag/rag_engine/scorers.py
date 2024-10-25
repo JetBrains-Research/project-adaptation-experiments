@@ -10,7 +10,7 @@ class BaseScorer:
 
     def score_repo(
         self, completion_prefix: str, chunked_repo: ChunkedRepo
-    ) -> ChunkedRepo:
+    ) -> list[float]:
         scores = list()
         completion_split = self.splitter(completion_prefix)
 
@@ -22,8 +22,7 @@ class BaseScorer:
             # removing BOS token TODO
             scores.append(self.score(completion_split, chunk.content_token))
 
-        chunked_repo.set_scores(scores)
-        return chunked_repo
+        return scores
 
     def score_dict(self, query: str, docs: dict[str, str]) -> dict[str, dict]:
 
@@ -38,7 +37,7 @@ class BaseScorer:
 
     def __call__(
         self, query: str, docs: ChunkedRepo | dict
-    ) -> ChunkedRepo | dict:
+    ) -> list[float] | dict:
 
         if isinstance(docs, ChunkedRepo):
             scored_results = self.score_repo(query, docs)
@@ -76,7 +75,7 @@ class IOUScorer(BaseScorer):
 class BM25Scorer(BaseScorer):
     def __call__(
         self, query: str, docs: ChunkedRepo
-    ) -> ChunkedRepo:
+    ) -> list[float]:
         # Init BM25
         if docs.bm25 is None:
             docs.get_bm25(self.splitter)
@@ -84,9 +83,8 @@ class BM25Scorer(BaseScorer):
         query_split = self.splitter(query)
         
         scores = docs.bm25.get_scores(query_split)
-        docs.set_scores(scores)
         
-        return docs
+        return scores.tolist()
 
 
 def get_scorer(name: str, **kwargs) -> BaseScorer:

@@ -1,5 +1,6 @@
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from omegaconf import DictConfig, OmegaConf
+from torch import le
 
 from rag.data_loading import (ChunkedRepo, FileStorage, RepoStorage,
                               map_dp_to_dataclass)
@@ -83,36 +84,39 @@ class ChunkScoreComposer(BaseContextComposer):
     def _score_chunks(
         self, completion_prefix: str, chunked_repo: ChunkedRepo
     ) -> ChunkedRepo:
-        chunked_repo = self.scorer(completion_prefix, chunked_repo)
+        scores = self.scorer(completion_prefix, chunked_repo)
+        chunked_repo.set_scores(scores)
         chunked_repo = chunked_repo.top_k(self.top_k)
 
         return chunked_repo
 
     def context_composer(
-        self, datapoint: dict, line_index: int, cashed_repo: dict | None = None
+        self, datapoint: dict, line_index: int, cached_repo: dict[str, ChunkedRepo] | None = None
     ) -> tuple[str, dict | None]:
         # TODO get completion file and repo from datapoint.
         repo_snapshot = map_dp_to_dataclass(datapoint)
         # TODO get completion file before gt line
         completion_item = self.completion_composer(datapoint, line_index)
 
-        if cashed_repo is not None:
-            chunked_repo = cashed_repo["cashed_repo"]
+        # TODO fix cached repo
+        if cached_repo is not None:
+            chunked_repo = cached_repo["cached_repo"]
         else:
             chunked_repo = self._get_chunks(completion_item, repo_snapshot)
-            cashed_repo = {"cashed_repo": chunked_repo}
+            cached_repo = {"cached_repo": chunked_repo}
+
         scored_chunked_repo = self._score_chunks(
             completion_item["prefix"], chunked_repo
         )
         context = self.merge_chunks(scored_chunked_repo)
 
-        return context, cashed_repo
+        return context, cached_repo
 
     def context_and_completion_composer(
-        self, datapoint: dict, line_index: int, cashed_repo: dict | None = None
+        self, datapoint: dict, line_index: int, cached_repo: dict | None = None
     ) -> tuple[dict[str, str], dict | None]:
 
-        context, cashed_repo = self.context_composer(datapoint, line_index, cashed_repo)
+        context, cached_repo = self.context_composer(datapoint, line_index, cached_repo)
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
             self.last_chunk.filename + "\n\n" + self.last_chunk.content.strip() + "\n"
@@ -120,7 +124,7 @@ class ChunkScoreComposer(BaseContextComposer):
         full_context = context + "\n\n" + completion_context
         completion_item["full_context"] = full_context
 
-        return completion_item, cashed_repo
+        return completion_item, cached_repo
 
 
 if __name__ == "__main__":
