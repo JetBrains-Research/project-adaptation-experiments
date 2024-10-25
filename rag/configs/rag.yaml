@@ -1,14 +1,13 @@
 rag:
   model: "deepseek-ai/deepseek-coder-1.3b-base"
-  chunk_lines_size: 64
-  overlap_lines_size: 8
-  completion_file_truncate_lines: 64
-  chunk_completion_file: True
-  iou_file_type: "by_token"
-  top_k: 13
   splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
   scorer: "bm25" # ["bm25", "iou"]
   chunker: "full_file" #["full_file", "fixed_line"]
+  top_k: -1
   use_n_grams: true
   n_grams_min: 1
   n_grams_max: 4
+  chunk_lines_size: 64
+  overlap_lines_size: 8
+  completion_file_truncate_lines: 64
+  chunk_completion_file: False
