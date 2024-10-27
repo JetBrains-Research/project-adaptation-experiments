@@ -16,6 +16,7 @@ from rag_engine.chunkers import get_chunker
 from rag_engine.scorers import get_scorer
 from rag_engine.splitters import get_splitter
 from configs.exclusion import exclusion
+from configs.get_info_dict import get_info_dict
 
 """
 CUDA_VISIBLE_DEVICES=1 python3 eval_plcc_on_rag.py limit=4
@@ -36,16 +37,7 @@ def run_eval_plcc(config: DictConfig):
         print("Skipping this configuration")
         return None
 
-    run_info = {"language": config.data.language,
-                "model": config.model.model_name_or_path,
-                "composer": config.data.composer_name,
-                "scorer": config_rag.scorer,
-                "splitter": config_rag.splitter,
-                "chunker": config_rag.chunker,
-                "use_n_grams": config_rag.use_n_grams,
-                "n_grams_max": config_rag.n_grams_max,
-                "n_grams_min": config_rag.n_grams_min}
-
+    run_info = get_info_dict(config)
     vllm_args = dict(config.vllm.vllm_args) if config.vllm.vllm_args is not None else {}
     generation_engine = VllmEngine(
         hf_model_path=config.model.model_name_or_path,

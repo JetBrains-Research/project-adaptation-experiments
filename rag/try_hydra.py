@@ -8,6 +8,7 @@ def main(config: DictConfig):
     scorer = config.rag.scorer
     splitter = config.rag.splitter
     n_grams_max = config.rag.n_grams_max
+    composer_name = config.data.composer_name
 
     if exclusion(scorer, splitter, n_grams_max):
         print("Skipping this configuration")
