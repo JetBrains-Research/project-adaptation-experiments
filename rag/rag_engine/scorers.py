@@ -74,15 +74,17 @@ class IOUScorer(BaseScorer):
 
 class BM25Scorer(BaseScorer):
     def __call__(
-        self, query: str, docs: ChunkedRepo
+        self, query: str, docs: ChunkedRepo | dict
     ) -> list[float]:
-        # Init BM25
-        if docs.bm25 is None:
-            docs.get_bm25(self.splitter)
 
         query_split = self.splitter(query)
-        
-        scores = docs.bm25.get_scores(query_split)
+        if isinstance(docs, ChunkedRepo):
+            # Init BM25
+            if docs.bm25 is None:
+                docs.get_bm25(self.splitter)
+            scores = docs.bm25.get_scores(query_split)
+        elif isinstance(docs, dict):
+            pass
         
         return scores.tolist()
 
