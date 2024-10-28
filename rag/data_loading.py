@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 from typing import Iterator
-from rag.rag_engine.splitters import BaseSplitter
-from rank_bm25 import BM25Okapi
 import rank_bm25
 
 @dataclass
@@ -148,14 +146,6 @@ class ChunkedRepo:
         chunks = self.chunks
         sorted_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
         return ChunkedRepo(chunks=sorted_chunks[:k])
-
-    def get_bm25(self, splitter: BaseSplitter):
-        docs_split = list()
-
-        for doc in self.chunks:
-            docs_split.append(splitter(doc.content))
-
-        self.bm25 = BM25Okapi(docs_split)
 
 
 def map_dp_to_dataclass(dp) -> RepoStorage:

@@ -1,3 +1,5 @@
+from rank_bm25 import BM25Okapi
+
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
 
@@ -70,9 +72,18 @@ class IOUScorer(BaseScorer):
         iou = len(intersection) / len(union)
 
         return iou
-    
+
 
 class BM25Scorer(BaseScorer):
+
+    def get_bm25(self, chunks):
+        docs_split = list()
+
+        for doc in chunks:
+            docs_split.append(self.splitter(doc.content))
+
+        return BM25Okapi(docs_split)
+
     def __call__(
         self, query: str, docs: ChunkedRepo | dict
     ) -> list[float]:
@@ -81,7 +92,7 @@ class BM25Scorer(BaseScorer):
         if isinstance(docs, ChunkedRepo):
             # Init BM25
             if docs.bm25 is None:
-                docs.get_bm25(self.splitter)
+                docs.bm25 = self.get_bm25(docs.chunks)
             scores = docs.bm25.get_scores(query_split)
         elif isinstance(docs, dict):
             pass
