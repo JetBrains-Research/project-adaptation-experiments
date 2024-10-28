@@ -26,8 +26,8 @@ def run_benchmark(config: DictConfig) -> pd.DataFrame:
     splitter = get_splitter(config_rag.splitter, model_name=config_rag.model)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
     dataset = load_data(["python", "java", "kotlin"])
-    # limit = config.limit
-    limit = 5
+    limit = config.limit
+    # limit = 5
 
     if exclusion(config.rag.scorer, config.rag.splitter, config.rag.n_grams_max):
         print("Skipping this configuration")

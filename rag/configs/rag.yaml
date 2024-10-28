@@ -6,7 +6,7 @@ rag:
   chunker: "full_file" #["full_file", "fixed_line"]
   use_n_grams: true
   n_grams_min: 1
-  n_grams_max: 4
+  n_grams_max: 1
   chunk_lines_size: 64
   overlap_lines_size: 8
   completion_file_truncate_lines: 64

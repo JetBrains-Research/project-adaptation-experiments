@@ -44,6 +44,7 @@ def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
     for item in tqdm(dataset):
         issue_description = item["issue_description"]
         repo_content = item["repo_content"]
+        # TODO add filenames to the filecontent as a comment.
         if len(repo_content) <= 2:
             continue
         start_time = time.time()
