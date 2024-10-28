@@ -1,5 +1,6 @@
 defaults:
   - plcc
   - rag
+  - bug_localization
   - sweep
 limit: -1

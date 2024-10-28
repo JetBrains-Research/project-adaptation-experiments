@@ -6,6 +6,7 @@
 from tqdm import tqdm
 import time
 import pandas as pd
+from pathlib import Path
 
 from rag.metrics.metrics import calc_f1, calc_ndcg
 
@@ -98,3 +99,18 @@ def evaluate_scorer(dataset, scorer, meta_info: dict, limit=-1):
     summary = summary.assign(**meta_info)
 
     return results, summary
+
+def save_append_df(df: pd.DataFrame, file: str | Path) -> None:
+
+    results_json = df.to_json()
+    with open(file, "a") as f:
+        f.write(results_json)
+        f.write("\n")
+
+def save_results(results, summary, result_folder: str, results_filename: str) -> None:
+
+    summary_file = Path(result_folder) / Path(results_filename)
+    detailed_file = summary_file.with_stem(summary_file.stem + "_detailed")
+
+    save_append_df(results, detailed_file)
+    save_append_df(summary, summary_file)

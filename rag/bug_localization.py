@@ -2,7 +2,6 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pathlib import Path
 
 import hydra
 import pandas as pd
@@ -13,17 +12,13 @@ from rag.rag_engine.scorers import get_scorer
 from rag.rag_engine.splitters import get_splitter
 from configs.exclusion import exclusion
 from configs.get_info_dict import get_info_dict
-from rag.bug_localization.evaluator import evaluate_scorer
+from rag.bug_localization.evaluator import evaluate_scorer, save_results
 
 
 # TODO refactor
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def run_benchmark(config: DictConfig) -> pd.DataFrame:
-
-    output_folder = Path(
-        "/mnt/data/galimzyanov/long-contex-eval/output/bug_localization/"
-    )
 
     config_rag = config.rag
     run_info = get_info_dict(config)
@@ -39,17 +34,7 @@ def run_benchmark(config: DictConfig) -> pd.DataFrame:
         return None
 
     results, summary = evaluate_scorer(dataset, scorer, run_info, limit=limit)
-
-    results.to_json(
-        output_folder / f"results_{config_rag.splitter}.jsonl",
-        orient="records",
-        lines=True,
-    )
-    summary.to_json(
-        output_folder / f"results_{config_rag.splitter}_summary.jsonl",
-        orient="records",
-        lines=True,
-    )
+    save_results(results, summary, config.bug_localization.result_folder, config.bug_localization.results_filename)
 
     return results
 
