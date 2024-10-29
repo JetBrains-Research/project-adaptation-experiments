@@ -1,8 +1,10 @@
-from rank_bm25 import BM25Okapi
 from typing import Iterable
+
+from rank_bm25 import BM25Okapi
 
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
+
 
 class BaseScorer:
     def __init__(self, splitter: BaseSplitter):
@@ -36,10 +38,7 @@ class BaseScorer:
 
         return scored_docs
 
-    def __call__(
-        self, query: str, docs: ChunkedRepo | dict
-    ) -> list[float] | dict:
-
+    def __call__(self, query: str, docs: ChunkedRepo | dict) -> list[float] | dict:
         if isinstance(docs, ChunkedRepo):
             scored_results = self.score_repo(query, docs)
         elif isinstance(docs, dict):
@@ -57,7 +56,6 @@ class IOUScorer(BaseScorer):
         super(IOUScorer, self).__init__(splitter)
 
     def score(self, list1: list[str | int], list2: list[str | int]):
-
         assert isinstance(list1, (list, set, tuple)) and isinstance(
             list2, (list, set, tuple)
         ), "Passed lists are not a list, tuple, or set"
@@ -74,7 +72,6 @@ class IOUScorer(BaseScorer):
 
 
 class BM25Scorer(BaseScorer):
-
     def get_bm25(self, docs: Iterable[str]):
         docs_split = list()
 
@@ -84,7 +81,6 @@ class BM25Scorer(BaseScorer):
         return BM25Okapi(docs_split)
 
     def __call__(self, query: str, docs: ChunkedRepo | dict) -> list[float]:
-
         query_split = self.splitter(query)
         if isinstance(docs, ChunkedRepo):
             # Init BM25
@@ -94,7 +90,7 @@ class BM25Scorer(BaseScorer):
         elif isinstance(docs, dict):
             bm25 = self.get_bm25(docs.values())
         else:
-            raise TypeError(f"Unsupported docs type")
+            raise TypeError("Unsupported docs type")
 
         scores = bm25.get_scores(query_split)
 

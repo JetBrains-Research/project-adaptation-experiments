@@ -172,10 +172,10 @@ def get_repo_content_on_commit(
                     try:
                         content = file.read()
                         file_contents[file_path] = str(content)
-                    except Exception as e:
+                    except Exception:
                         file_contents[file_path] = None
                         # print(f"Can not read file with ext {file_path}. Replace with empty string...", e)
-            except Exception as e:
+            except Exception:
                 file_contents[file_path] = None
     repo.git.checkout("HEAD", ".")
     return file_contents

@@ -28,7 +28,6 @@ class FromFileComposer(PathDistanceComposer):
 
     @staticmethod
     def calc_hash(completion_dp, line_index: int, line_type: str) -> str:
-
         string_id = (
             completion_dp["gt"]
             + ", "
@@ -58,7 +57,6 @@ class FromFileComposer(PathDistanceComposer):
         return best_file
 
     def context_composer(self, datapoint: dict, line_index: int | None = None) -> str:
-
         best_file = self.get_best_context(datapoint, line_index)
         files_to_merge = {best_file["context_filename"]: best_file["context_content"]}
         # Takes dict[filename, filecontent] as an input
@@ -69,7 +67,7 @@ class FromFileComposer(PathDistanceComposer):
     def context_and_completion_composer(
         self, datapoint: dict, line_index: int
     ) -> dict[str]:
-        context = self.context_composer(datapoint, line_index)
+        self.context_composer(datapoint, line_index)
         item_completion = self.completion_composer(datapoint, line_index)
         best_file = self.get_best_context(datapoint, line_index)
         if isinstance(best_file, pd.DataFrame):
@@ -81,7 +79,6 @@ class FromFileComposer(PathDistanceComposer):
 
 
 if __name__ == "__main__":
-
     best_contexts_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_optimal_medium_unique.jsonl"
     # best_contexts_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
     rag_config = OmegaConf.load("rag_config.yaml")

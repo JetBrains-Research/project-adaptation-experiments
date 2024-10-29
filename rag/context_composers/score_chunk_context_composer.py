@@ -1,6 +1,5 @@
 from kotlineval.data.plcc.base_context_composer import BaseContextComposer
-from omegaconf import DictConfig, OmegaConf
-from torch import le
+from omegaconf import DictConfig
 
 from rag.data_loading import (ChunkedRepo, FileStorage, RepoStorage,
                               map_dp_to_dataclass)
@@ -55,9 +54,7 @@ class ChunkScoreComposer(BaseContextComposer):
         # Reversing the order, so the most relevant chunks would be close to completion file.
         return "\n".join(context_lines[::-1])
 
-    def _get_chunks(
-        self, repo_snapshot: RepoStorage
-    ) -> ChunkedRepo:
+    def _get_chunks(self, repo_snapshot: RepoStorage) -> ChunkedRepo:
         # filter repo
         repo_snapshot.filter_by_extensions(self.allowed_extensions)
 
@@ -76,7 +73,10 @@ class ChunkScoreComposer(BaseContextComposer):
         return chunked_repo
 
     def context_composer(
-        self, datapoint: dict, line_index: int, cached_repo: dict[str, ChunkedRepo] | None = None
+        self,
+        datapoint: dict,
+        line_index: int,
+        cached_repo: dict[str, ChunkedRepo] | None = None,
     ) -> tuple[str, dict | None]:
         # TODO get completion file and repo from datapoint.
         repo_snapshot = map_dp_to_dataclass(datapoint)
@@ -99,11 +99,12 @@ class ChunkScoreComposer(BaseContextComposer):
                 filename=completion_item["filename"], content=completion_item["prefix"]
             )
             chunked_completion = self._get_chunks(completion_snapshot)
-            
+
             # save last chunk of completion prefix or just completion prefix
             self.completion_chunk = chunked_completion.chunks.pop()
             self.completion_chunk = FileStorage(
-                filename=self.completion_chunk.filename, content=self.completion_chunk.content
+                filename=self.completion_chunk.filename,
+                content=self.completion_chunk.content,
             )
 
         # TODO merge chunked_repo and chunked_completion
@@ -118,11 +119,13 @@ class ChunkScoreComposer(BaseContextComposer):
     def context_and_completion_composer(
         self, datapoint: dict, line_index: int, cached_repo: dict | None = None
     ) -> tuple[dict[str, str], dict | None]:
-
         context, cached_repo = self.context_composer(datapoint, line_index, cached_repo)
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
-                self.completion_chunk.filename + "\n\n" + self.completion_chunk.content.strip() + "\n"
+            self.completion_chunk.filename
+            + "\n\n"
+            + self.completion_chunk.content.strip()
+            + "\n"
         )
         full_context = context + "\n\n" + completion_context
         completion_item["full_context"] = full_context
@@ -131,7 +134,6 @@ class ChunkScoreComposer(BaseContextComposer):
 
 
 if __name__ == "__main__":
-
     # from iou_chunk_scorer import IOUChunkScorer
     #
     # rag_config = OmegaConf.load("rag_config.yaml")
