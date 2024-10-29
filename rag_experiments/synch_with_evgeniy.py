@@ -35,21 +35,21 @@ def gen_id(dataframe):
 
 # %%
 
-# results_detailed_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/check_results/check_results_lite.jsonl"
+# results_detailed_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/check_results/check_results_lite.jsonl"
 # with open(results_detailed_path) as f:
 #     results_jenya = pd.read_json(f, orient="records")
 # del results_jenya["composed_context"]
-# results_jenya.to_json("/mnt/data2/galimzyanov/long-contex-eval/datasets/check_results/check_results_lite_.jsonl")
+# results_jenya.to_json("/mnt/data2/galimzyanov/long-context-eval/datasets/check_results/check_results_lite_.jsonl")
 
-results_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/check_results/check_results_filelevel.jsonl"
+results_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/check_results/check_results_filelevel.jsonl"
 with open(results_path) as f:
     results_jenya = pd.read_json(f, orient="records")
 
-results_path = "/mnt/data2/galimzyanov/long-contex-eval/output/rag/results_no_context_detailed.jsonl"
+results_path = "/mnt/data2/galimzyanov/long-context-eval/output/rag/results_no_context_detailed.jsonl"
 with open(results_path) as f:
     results_timur = pd.read_json(f, orient="records")
 
-# results_path = "/mnt/data2/galimzyanov/long-contex-eval/output/rag/results_path_distance_detailed.jsonl"
+# results_path = "/mnt/data2/galimzyanov/long-context-eval/output/rag/results_path_distance_detailed.jsonl"
 # with open(results_path) as f:
 #     results_timur = pd.read_json(f, orient="records")
 

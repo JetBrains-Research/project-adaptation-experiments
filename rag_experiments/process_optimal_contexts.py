@@ -93,14 +93,14 @@ def add_tokenized_files(raw_results: pd.DataFrame, results_added_path):
 # %%
 
 # results_path = (
-#     "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_bruteforce_medium_raw.jsonl"
+#     "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_bruteforce_medium_raw.jsonl"
 # )
 # with open(results_path) as f:
 #     results = pd.read_json(f, orient="records", lines=True)
 
 # results_test = results.iloc[:100]
 # %%
-results_added_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_bruteforce_medium_add_tokens.jsonl"
+results_added_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_bruteforce_medium_add_tokens.jsonl"
 # results = add_tokenized_files(results, results_added_path)
 
 with open(results_added_path) as f:

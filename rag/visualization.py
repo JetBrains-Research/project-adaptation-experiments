@@ -5,7 +5,7 @@ import seaborn as sns
 
 
 '''
-python3 visualization.py --path /mnt/data/galimzyanov/long-contex-eval/output/rag/results_all_python_chunk_score.jsonl
+python3 visualization.py --path /mnt/data/galimzyanov/long-context-eval/output/rag/results_all_python_chunk_score.jsonl
 '''
 
 import matplotlib.pyplot as plt

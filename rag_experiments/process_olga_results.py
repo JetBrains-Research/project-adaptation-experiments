@@ -116,7 +116,7 @@ em_olga = exact_match_olga(precomp_dataset_raw)
 # %%
 
 output_path = (
-    "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"
+    "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_medium_pathdist_olga.jsonl"
 )
 precomp_dataset.to_json(output_path, orient="records", lines=True)
 
@@ -129,10 +129,10 @@ input_data_path = (
 )
 
 output_data_path = (
-    "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_raw.jsonl"
+    "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_optimal_medium_raw.jsonl"
 )
 output_unique_data_path = (
-    "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
+    "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_optimal_medium_unique.jsonl"
 )
 
 data_hash = add_hash_to_df(input_data_path, output_data_path)

@@ -82,8 +82,8 @@ class FromFileComposer(PathDistanceComposer):
 
 if __name__ == "__main__":
 
-    best_contexts_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
-    # best_contexts_path = "/mnt/data2/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
+    best_contexts_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_optimal_medium_unique.jsonl"
+    # best_contexts_path = "/mnt/data2/galimzyanov/long-context-eval/datasets/plcc_medium_pathdist_olga_fixed.jsonl"
     rag_config = OmegaConf.load("rag_config.yaml")
     score_composer = FromFileComposer(
         lang_extensions=[".py"], dataset_path=best_contexts_path
