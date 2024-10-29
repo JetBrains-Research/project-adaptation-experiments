@@ -3,7 +3,6 @@ from huggingface_hub import hf_hub_download
 
 
 def load_data(languages: list[str]) -> list[dict]:
-
     all_data = []
     for lang in languages:
         data_file = hf_hub_download(

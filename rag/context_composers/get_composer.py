@@ -7,7 +7,6 @@ from rag.context_composers.score_chunk_context_composer import \
 
 
 def get_composer(config, **kwargs) -> BaseContextComposer:
-
     if config.data.composer_name == "chunk_score":
         context_composer = ChunkScoreComposer(language=config.data.language, **kwargs)
     elif config.data.composer_name == "from_file":

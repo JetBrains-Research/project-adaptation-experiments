@@ -2,7 +2,6 @@ from rag.data_loading import ChunkedFile, ChunkedRepo, FileStorage, RepoStorage
 
 
 class BaseChunker:
-
     def __init__(self, **kwargs):
         pass
 
@@ -19,14 +18,12 @@ class BaseChunker:
 
 
 class FixedLineChunker(BaseChunker):
-
     def __init__(
         self,
         chunk_lines_size: int = 32,
         overlap_lines_size: int = 8,
         filter_striped: bool = False,
     ):
-
         if chunk_lines_size <= overlap_lines_size:
             raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
         self.chunk_lines_size = chunk_lines_size

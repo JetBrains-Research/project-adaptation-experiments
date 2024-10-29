@@ -3,7 +3,6 @@ from sklearn.metrics import ndcg_score
 
 
 def calc_f1(true_set: list | set, pred_set: list | set) -> float:
-
     true_set = set(true_set)
     pred_set = set(pred_set)
 
@@ -27,7 +26,6 @@ def calc_f1(true_set: list | set, pred_set: list | set) -> float:
 
 
 def calc_ndcg(true_docs: list[str], scored_list: dict[str, float]) -> float:
-
     true_relevance = np.asarray(
         [[1 if doc in true_docs else 0 for doc in scored_list.keys()]]
     )

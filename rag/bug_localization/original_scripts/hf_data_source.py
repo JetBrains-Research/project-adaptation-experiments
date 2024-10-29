@@ -12,7 +12,6 @@ from rag.bug_localization.git_functions import (
 
 
 class HFDataSource:
-
     def __init__(
         self,
         hub_name: str,

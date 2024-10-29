@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Iterator
+
 import rank_bm25
+
 
 @dataclass
 class FileStorage:

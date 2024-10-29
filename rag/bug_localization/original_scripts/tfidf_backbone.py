@@ -7,7 +7,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 def data_to_vectors(
     issue_text: str, repo_content: Dict[str, str]
 ) -> tuple[np.ndarray[str], np.ndarray[str]]:
-
     file_names = ["issue_text"]
     file_contents = [issue_text]
     for file_name, file_content in repo_content.items():
@@ -18,7 +17,6 @@ def data_to_vectors(
 
 
 class TfIdfEmbBackbone:
-
     def __init__(self, tokenizer, ranker):
         self._tokenizer = tokenizer
         self._ranker = ranker

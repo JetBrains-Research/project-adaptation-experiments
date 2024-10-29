@@ -7,19 +7,18 @@ import hydra
 import pandas as pd
 from omegaconf import DictConfig
 
-from rag.bug_localization.load_data import load_data
-from rag.rag_engine.scorers import get_scorer
-from rag.rag_engine.splitters import get_splitter
 from configs.exclusion import exclusion
 from configs.get_info_dict import get_info_dict
 from rag.bug_localization.evaluator import evaluate_scorer, save_results
-
+from rag.bug_localization.load_data import load_data
+from rag.rag_engine.scorers import get_scorer
+from rag.rag_engine.splitters import get_splitter
 
 # TODO refactor
 
+
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
-
     config_rag = config.rag
     run_info = get_info_dict(config)
 
@@ -34,7 +33,12 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
         return None
 
     results, summary = evaluate_scorer(dataset, scorer, run_info, limit=limit)
-    save_results(results, summary, config.bug_localization.result_folder, config.bug_localization.results_filename)
+    save_results(
+        results,
+        summary,
+        config.bug_localization.result_folder,
+        config.bug_localization.results_filename,
+    )
 
     return results
 

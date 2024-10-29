@@ -3,6 +3,7 @@ from omegaconf import DictConfig
 
 from configs.exclusion import exclusion
 
+
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(config: DictConfig):
     scorer = config.rag.scorer
@@ -16,6 +17,7 @@ def main(config: DictConfig):
 
     print(f"limit = {config.limit}")
     print(f"{scorer}, {splitter}, {n_grams_max}")
+
 
 if __name__ == "__main__":
     # You can pass limit argument in the cmd line:

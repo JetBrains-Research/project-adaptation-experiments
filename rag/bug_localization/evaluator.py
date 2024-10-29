@@ -1,13 +1,13 @@
-from tqdm import tqdm
 import time
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+from tqdm import tqdm
 
 from rag.metrics.metrics import calc_f1, calc_ndcg
 
-COMMENT_SEPS = {"python": "#",
-                "java": "//",
-                "kotlin": "//"}
+COMMENT_SEPS = {"python": "#", "java": "//", "kotlin": "//"}
+
 
 def select_files(row: pd.Series) -> list[str]:
     sorted_dict = row["scores"]
@@ -35,18 +35,18 @@ def ndcg_by_row(row: pd.Series) -> float:
 
     return f1
 
-def ammend_repo_files(repo_content: dict[str, str], lang: str) -> dict[str, str]:
 
+def ammend_repo_files(repo_content: dict[str, str], lang: str) -> dict[str, str]:
     sep = COMMENT_SEPS[lang]
     corrected_repo = dict()
 
     for file, content in repo_content.items():
-        corrected_repo[file] = f"{sep} filepath: {file}\n"+ content
+        corrected_repo[file] = f"{sep} filepath: {file}\n" + content
 
     return corrected_repo
 
-def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
 
+def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
     results_ds = list()
     i = 1
     for item in tqdm(dataset):
@@ -74,6 +74,7 @@ def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
 
     return pd.DataFrame(results_ds)
 
+
 def add_metrics(results) -> tuple[pd.DataFrame, pd.DataFrame]:
     results["repo_symbols_count_M"] = results["repo_symbols_count"] / 1e6
     results["time_per_repo_symb_M"] = (
@@ -97,34 +98,37 @@ def add_metrics(results) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def evaluate_scorer(dataset, scorer, meta_info: dict, limit=-1):
-
     results = run_benchmark(dataset, scorer, limit)
     results, summary = add_metrics(results)
 
-    meta_info = {"scorer": meta_info["scorer"],
-                 "splitter": meta_info["splitter"],
-                 "use_n_grams": meta_info["use_n_grams"],
-                 "n_grams_max": meta_info["n_grams_max"],
-                 "n_grams_min": meta_info["n_grams_min"]}
+    meta_info = {
+        "scorer": meta_info["scorer"],
+        "splitter": meta_info["splitter"],
+        "use_n_grams": meta_info["use_n_grams"],
+        "n_grams_max": meta_info["n_grams_max"],
+        "n_grams_min": meta_info["n_grams_min"],
+    }
 
     print(f"Mean f1 = {summary['f1'][0]:.2f}")
     print(f"Mean ndcg = {summary['ndcg'][0]:.2f}")
-    print(f"Average time per repo million token = {summary['time_per_repo_symb_M'][0]:.3f}")
+    print(
+        f"Average time per repo million token = {summary['time_per_repo_symb_M'][0]:.3f}"
+    )
 
     results = results.assign(**meta_info)
     summary = summary.assign(**meta_info)
 
     return results, summary
 
-def save_append_df(df: pd.DataFrame, file: str | Path) -> None:
 
+def save_append_df(df: pd.DataFrame, file: str | Path) -> None:
     results_json = df.to_json()
     with open(file, "a") as f:
         f.write(results_json)
         f.write("\n")
 
-def save_results(results, summary, result_folder: str, results_filename: str) -> None:
 
+def save_results(results, summary, result_folder: str, results_filename: str) -> None:
     summary_file = Path(result_folder) / Path(results_filename)
     detailed_file = summary_file.with_stem(summary_file.stem + "_detailed")
 

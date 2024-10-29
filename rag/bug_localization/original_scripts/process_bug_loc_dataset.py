@@ -7,7 +7,6 @@ from rag.bug_localization.hf_data_source import HFDataSource
 load_dotenv()
 
 for lang, lang_short in zip(["python", "java", "kotlin"], ["py", "java", "kt"]):
-
     data_src = HFDataSource(
         repos_dir="/mnt/data/shared-data/lca/repos_updated",
         cache_dir="/mnt/data/shared-data/cache",
