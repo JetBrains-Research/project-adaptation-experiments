@@ -1,4 +1,5 @@
 from rank_bm25 import BM25Okapi
+from typing import Iterable
 
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
@@ -74,7 +75,7 @@ class IOUScorer(BaseScorer):
 
 class BM25Scorer(BaseScorer):
 
-    def get_bm25(self, docs):
+    def get_bm25(self, docs: Iterable[str]):
         docs_split = list()
 
         for doc in docs:
@@ -82,30 +83,22 @@ class BM25Scorer(BaseScorer):
 
         return BM25Okapi(docs_split)
 
-    def __call__(
-        self, query: str, docs: ChunkedRepo | dict
-    ) -> list[float] | dict:
+    def __call__(self, query: str, docs: ChunkedRepo | dict) -> list[float]:
 
         query_split = self.splitter(query)
         if isinstance(docs, ChunkedRepo):
             # Init BM25
             if docs.bm25 is None:
                 docs.bm25 = self.get_bm25([chunk.content for chunk in docs.chunks])
-            scores = docs.bm25.get_scores(query_split)
-
-            return scores.tolist()
+            bm25 = docs.bm25
         elif isinstance(docs, dict):
-            if 'bm25' not in docs.keys():
-                docs['bm25'] = self.get_bm25(docs.values())
-            scores = docs['bm25'].get_scores(query_split)
+            bm25 = self.get_bm25(docs.values())
+        else:
+            raise TypeError(f"Unsupported docs type")
 
-            scored_docs = dict()
-            for (doc_name, doc), score in zip(docs.items(), scores):
-                scored_docs[doc_name] = {"doc": doc, "score": score}
+        scores = bm25.get_scores(query_split)
 
-            return scored_docs
-        
-        # return scores.tolist()
+        return scores.tolist()
 
 
 def get_scorer(name: str, **kwargs) -> BaseScorer:

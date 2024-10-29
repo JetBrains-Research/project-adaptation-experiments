@@ -48,16 +48,16 @@ def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
         if len(repo_content) <= 2:
             continue
         start_time = time.time()
-        scoring_res = scorer(issue_description, repo_content)
+        scores = scorer(issue_description, repo_content)
         end_time = time.time()
-        scoring_res = {key: value["score"] for key, value in scoring_res.items()}
-        scoring_res = dict(
-            sorted(scoring_res.items(), key=lambda kv: kv[1], reverse=True)
+        scored_files = {file: score for file, score in zip(repo_content.keys(), scores)}
+        scored_files = dict(
+            sorted(scored_files.items(), key=lambda kv: kv[1], reverse=True)
         )
         item_copy = item.copy()
         del item_copy["repo_content"]
         item_copy["time_s"] = end_time - start_time
-        item_copy["scores"] = scoring_res
+        item_copy["scores"] = scored_files
         results_ds.append(item_copy)
         i += 1
         if limit > 0 and i > limit:
@@ -65,7 +65,7 @@ def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
 
     return pd.DataFrame(results_ds)
 
-def add_scores(results) -> tuple[pd.DataFrame, pd.DataFrame]:
+def add_metrics(results) -> tuple[pd.DataFrame, pd.DataFrame]:
     results["repo_symbols_count_M"] = results["repo_symbols_count"] / 1e6
     results["time_per_repo_symb_M"] = (
         results["time_s"] / results["repo_symbols_count_M"]
@@ -90,7 +90,7 @@ def add_scores(results) -> tuple[pd.DataFrame, pd.DataFrame]:
 def evaluate_scorer(dataset, scorer, meta_info: dict, limit=-1):
 
     results = run_benchmark(dataset, scorer, limit)
-    results, summary = add_scores(results)
+    results, summary = add_metrics(results)
 
     meta_info = {"scorer": meta_info["scorer"],
                  "splitter": meta_info["splitter"],

@@ -18,7 +18,7 @@ from rag.bug_localization.evaluator import evaluate_scorer, save_results
 # TODO refactor
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
-def run_bug_localization(config: DictConfig) -> pd.DataFrame:
+def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
 
     config_rag = config.rag
     run_info = get_info_dict(config)
@@ -43,5 +43,5 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame:
 # %%
 if __name__ == "__main__":
     run_bug_localization()
-# output_folder = Path("/mnt/data2/galimzyanov/long-contex-eval/output/bug_localization/")
+# output_folder = Path("/mnt/data2/galimzyanov/long-context-eval/output/bug_localization/")
 # results_df = pd.read_json(output_folder/'results_word_splitter.jsonl', orient='records', lines=True)
