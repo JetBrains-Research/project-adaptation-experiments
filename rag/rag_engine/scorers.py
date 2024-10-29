@@ -21,16 +21,14 @@ class BaseScorer:
         for chunk in chunked_repo:
             if chunk.content_token is None:
                 chunk.content_token = self.splitter(chunk.content)
-            # removing BOS token TODO
             scores.append(self.score(completion_split, chunk.content_token))
 
         return scores
 
     def score_dict(self, query: str, docs: dict[str, str]) -> dict[str, dict]:
-
+        query_split = self.splitter(query)
         scored_docs = dict()
         for doc_name, doc in docs.items():
-            query_split = self.splitter(query)
             doc_split = self.splitter(doc)
             score = self.score(query_split, doc_split)
             scored_docs[doc_name] = {"doc": doc, "score": score}
@@ -76,28 +74,38 @@ class IOUScorer(BaseScorer):
 
 class BM25Scorer(BaseScorer):
 
-    def get_bm25(self, chunks):
+    def get_bm25(self, docs):
         docs_split = list()
 
-        for doc in chunks:
-            docs_split.append(self.splitter(doc.content))
+        for doc in docs:
+            docs_split.append(self.splitter(doc))
 
         return BM25Okapi(docs_split)
 
     def __call__(
         self, query: str, docs: ChunkedRepo | dict
-    ) -> list[float]:
+    ) -> list[float] | dict:
 
         query_split = self.splitter(query)
         if isinstance(docs, ChunkedRepo):
             # Init BM25
             if docs.bm25 is None:
-                docs.bm25 = self.get_bm25(docs.chunks)
+                docs.bm25 = self.get_bm25([chunk.content for chunk in docs.chunks])
             scores = docs.bm25.get_scores(query_split)
+
+            return scores.tolist()
         elif isinstance(docs, dict):
-            pass
+            if 'bm25' not in docs.keys():
+                docs['bm25'] = self.get_bm25(docs.values())
+            scores = docs['bm25'].get_scores(query_split)
+
+            scored_docs = dict()
+            for (doc_name, doc), score in zip(docs.items(), scores):
+                scored_docs[doc_name] = {"doc": doc, "score": score}
+
+            return scored_docs
         
-        return scores.tolist()
+        # return scores.tolist()
 
 
 def get_scorer(name: str, **kwargs) -> BaseScorer:

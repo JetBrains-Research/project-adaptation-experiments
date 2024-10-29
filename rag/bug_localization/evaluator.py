@@ -92,9 +92,15 @@ def evaluate_scorer(dataset, scorer, meta_info: dict, limit=-1):
     results = run_benchmark(dataset, scorer, limit)
     results, summary = add_scores(results)
 
-    print(f"Mean f1 = {summary['f1']:.2f}")
-    print(f"Mean ndcg = {summary['ndcg']:.2f}")
-    print(f"Average time per repo million token = {summary['time_per_repo_symb_M']:.3f}")
+    meta_info = {"scorer": meta_info["scorer"],
+                 "splitter": meta_info["splitter"],
+                 "use_n_grams": meta_info["use_n_grams"],
+                 "n_grams_max": meta_info["n_grams_max"],
+                 "n_grams_min": meta_info["n_grams_min"]}
+
+    print(f"Mean f1 = {summary['f1'][0]:.2f}")
+    print(f"Mean ndcg = {summary['ndcg'][0]:.2f}")
+    print(f"Average time per repo million token = {summary['time_per_repo_symb_M'][0]:.3f}")
 
     results = results.assign(**meta_info)
     summary = summary.assign(**meta_info)

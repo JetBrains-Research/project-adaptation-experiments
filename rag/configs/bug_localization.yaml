@@ -1,2 +1,3 @@
-result_folder: "/mnt/data/galimzyanov/long-contex-eval/output/bug_localization/"
-results_filename: "results_dev.jsonl"
+bug_localization:
+  result_folder: "/mnt/data/kolomyttseva/long-contex-eval/output/bug_localization/"
+  results_filename: "results_dev_1.jsonl"
