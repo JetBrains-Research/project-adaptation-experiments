@@ -1,14 +1,13 @@
-# import os
-# import sys
-#
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from tqdm import tqdm
 import time
 import pandas as pd
 from pathlib import Path
 
 from rag.metrics.metrics import calc_f1, calc_ndcg
+
+COMMENT_SEPS = {"python": "#",
+                "java": "//",
+                "kotlin": "//"}
 
 def select_files(row: pd.Series) -> list[str]:
     sorted_dict = row["scores"]
@@ -36,6 +35,15 @@ def ndcg_by_row(row: pd.Series) -> float:
 
     return f1
 
+def ammend_repo_files(repo_content: dict[str, str], lang: str) -> dict[str, str]:
+
+    sep = COMMENT_SEPS[lang]
+    corrected_repo = dict()
+
+    for file, content in repo_content.items():
+        corrected_repo[file] = f"{sep} filepath: {file}\n"+ content
+
+    return corrected_repo
 
 def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
 
@@ -44,7 +52,8 @@ def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
     for item in tqdm(dataset):
         issue_description = item["issue_description"]
         repo_content = item["repo_content"]
-        # TODO add filenames to the filecontent as a comment.
+        # Adding filenames to the repo content.
+        repo_content = ammend_repo_files(repo_content, item["language"])
         if len(repo_content) <= 2:
             continue
         start_time = time.time()
