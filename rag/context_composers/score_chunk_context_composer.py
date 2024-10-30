@@ -26,10 +26,6 @@ class ChunkScoreComposer(BaseContextComposer):
             allowed_extensions=allowed_extensions,
             completion_categories=completion_categories,
         )
-        self.chunk_kwargs = {
-            "chunk_lines_size": config_rag.chunk_lines_size,
-            "overlap_lines_size": config_rag.overlap_lines_size,
-        }
         self.score_model_name = config_rag.model
         self.scorer = scorer
         self.chunker = chunker
@@ -37,10 +33,7 @@ class ChunkScoreComposer(BaseContextComposer):
         self.top_k = config_rag.top_k
         self.chunk_completion_file = config_rag.chunk_completion_file
         if self.chunk_completion_file:
-            self.compl_file_trunc_lines = config_rag.chunk_lines_size
-        else:
-            self.compl_file_trunc_lines = config_rag.completion_file_truncate_lines
-        self.last_completion_chunk = None
+            self.completion_last_chunk_size = config_rag.completion_last_chunk_size
 
     @staticmethod
     def merge_chunks(chunked_repo: ChunkedRepo) -> str:
@@ -89,28 +82,28 @@ class ChunkScoreComposer(BaseContextComposer):
             chunked_repo = self._get_chunks(repo_snapshot)
             cached_repo = {"cached_repo": chunked_repo}
 
-        self.completion_chunk = FileStorage(
+        self.completion_last_chunk = FileStorage(
             filename=completion_item["filename"], content=completion_item["prefix"]
         )
-        # TODO add completion chunking
+        # TODO if we append chunked_completion to chunked_repo, we should recalculate bm25 each time
         if self.chunk_completion_file:
-            completion_snapshot = RepoStorage(list(), list())
-            completion_snapshot.add_item(
-                filename=completion_item["filename"], content=completion_item["prefix"]
-            )
-            chunked_completion = self._get_chunks(completion_snapshot)
+            completion_lines = completion_item["prefix"].split("\n")
 
-            # save last chunk of completion prefix or just completion prefix
-            self.completion_chunk = chunked_completion.chunks.pop()
-            self.completion_chunk = FileStorage(
-                filename=self.completion_chunk.filename,
-                content=self.completion_chunk.content,
+            self.completion_last_chunk = FileStorage(
+                filename=completion_item["filename"],
+                content="\n".join(completion_lines[-self.completion_last_chunk_size :]),
             )
 
-        # TODO merge chunked_repo and chunked_completion
+            completion_before_chunk = FileStorage(
+                filename=completion_item["filename"],
+                content="\n".join(completion_lines[:-self.completion_last_chunk_size]),
+            )
+            chunked_completion = self.chunker.chunk(completion_before_chunk)
+            chunked_repo.append(chunked_completion)
+
         # TODO. Here we should be able to pass other amount from completion_chunk, not only last chunk
         scored_chunked_repo = self._score_chunks(
-            self.completion_chunk.content, chunked_repo
+            self.completion_last_chunk.content, chunked_repo
         )
         context = self.merge_chunks(scored_chunked_repo)
 
@@ -122,9 +115,9 @@ class ChunkScoreComposer(BaseContextComposer):
         context, cached_repo = self.context_composer(datapoint, line_index, cached_repo)
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
-            self.completion_chunk.filename
+            self.completion_last_chunk.filename
             + "\n\n"
-            + self.completion_chunk.content.strip()
+            + self.completion_last_chunk.content.strip()
             + "\n"
         )
         full_context = context + "\n\n" + completion_context
