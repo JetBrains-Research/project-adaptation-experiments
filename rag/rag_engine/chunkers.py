@@ -21,13 +21,15 @@ class FixedLineChunker(BaseChunker):
     def __init__(
         self,
         chunk_lines_size: int = 32,
-        overlap_lines_size: int = 8,
+        stride: int = 8,
         filter_striped: bool = False,
     ):
-        if chunk_lines_size <= overlap_lines_size:
-            raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
+        # if chunk_lines_size <= stride:
+        #     raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
         self.chunk_lines_size = chunk_lines_size
-        self.overlap_lines_size = overlap_lines_size
+        self.stride = stride
+        if self.stride is None:
+            self.stride = self.chunk_lines_size
         self.filter_striped = filter_striped
 
     def chunk(self, file_st: FileStorage) -> ChunkedFile:
@@ -36,11 +38,12 @@ class FixedLineChunker(BaseChunker):
             lines = [line for line in lines if line.strip()]
         chunks = []
         total_lines = len(lines)
-        stride = self.chunk_lines_size - self.overlap_lines_size
-        for i in range(total_lines, self.chunk_lines_size - 1, -stride):
+        
+        # stride = self.chunk_lines_size - self.overlap_lines_size
+        for i in range(total_lines, self.chunk_lines_size - 1, -self.stride):
             start_idx = max(0, i - self.chunk_lines_size)
             chunks.append("\n".join(lines[start_idx:i]))
-        if total_lines % stride != 0:
+        if total_lines % self.stride != 0:
             chunks.append("\n".join(lines[: self.chunk_lines_size]))
         chunks = chunks[::-1]
 

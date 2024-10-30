@@ -34,6 +34,9 @@ def run_eval_plcc(config: DictConfig):
     config.output.results_filename = results_filename
     config_rag = config.rag
 
+    if config_rag.set_stride:
+        config_rag.stride = config_rag.chunk_lines_size // 2
+
     if exclusion(config_rag.scorer, config_rag.splitter, config_rag.n_grams_max):
         print("Skipping this configuration")
         return None
@@ -65,7 +68,14 @@ def run_eval_plcc(config: DictConfig):
     print(f"use_n_grams - {config_rag.use_n_grams}")
     if config_rag.use_n_grams:
         print(f"n_grams_max - {config_rag.n_grams_max}")
+    print(f"chunk_lines_size - {config_rag.chunk_lines_size}")
+    print(f"set_stride - {config_rag.set_stride}")
+    if config_rag.set_stride:
+        print(f"stride - {config_rag.stride}")
 
+    print(f"chunk_completion_file - {config_rag.chunk_completion_file}")
+    print(f"completion_last_chunk_size - {config_rag.completion_last_chunk_size}")
+    
     # TODO may be make more concise?
     splitter = get_splitter(
         config_rag.splitter,
@@ -75,7 +85,11 @@ def run_eval_plcc(config: DictConfig):
         n_grams_max=config_rag.n_grams_max,
     )
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
-    chunker = get_chunker(config_rag.chunker)
+    chunk_kwargs = {
+        "chunk_lines_size": config_rag.chunk_lines_size,
+        "stride": config_rag.stride,
+    }
+    chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
 
     context_composer = get_composer(
         config, chunker=chunker, scorer=scorer, config_rag=config.rag
