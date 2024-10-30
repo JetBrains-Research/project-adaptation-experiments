@@ -25,7 +25,7 @@ CUDA_VISIBLE_DEVICES=1 python3 eval_plcc_on_rag.py limit=4
 """
 # Change available GPUs acording to current state!
 # Change n_jobs in config accordingly
-AVAILABLE_GPU = [5,6]
+# AVAILABLE_GPU = [5,6]
 
 # TODO rename file
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -33,9 +33,9 @@ def run_eval_plcc(config: DictConfig):
     # You can pass limit argument in the cmd line
     # python eval_plcc_on_rag.py limit=15
 
-    job_id = HydraConfig.get().job.num
-    gpu_id = AVAILABLE_GPU[job_id%len(AVAILABLE_GPU)]
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    # job_id = HydraConfig.get().job.num
+    # gpu_id = AVAILABLE_GPU[job_id%len(AVAILABLE_GPU)]
+    # os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
