@@ -7,13 +7,8 @@ def get_info_dict(config: DictConfig) -> dict:
             "language": config.data.language,
             "model": config.model.model_name_or_path,
             "composer": config.data.composer_name,
-            "scorer": config.rag.scorer,
-            "splitter": config.rag.splitter,
-            "chunker": config.rag.chunker,
-            "use_n_grams": config.rag.use_n_grams,
-            "n_grams_max": config.rag.n_grams_max,
-            "n_grams_min": config.rag.n_grams_min,
         }
+        run_info.update(config.rag)
     elif config.data.composer_name == "path_distance":
         run_info = {
             "language": config.data.language,
