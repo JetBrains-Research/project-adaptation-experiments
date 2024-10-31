@@ -72,6 +72,11 @@ class IOUScorer(BaseScorer):
 
 
 class BM25Scorer(BaseScorer):
+
+    def __init__(self, splitter: BaseSplitter, do_cache = True):
+        super(BM25Scorer, self).__init__(splitter)
+        self.do_cache = do_cache
+
     def get_bm25(self, docs: Iterable[str]):
         docs_split = list()
 
@@ -84,8 +89,8 @@ class BM25Scorer(BaseScorer):
         query_split = self.splitter(query)
         if isinstance(docs, ChunkedRepo):
             # Init BM25
-            # if docs.bm25 is None:
-            docs.bm25 = self.get_bm25([chunk.content for chunk in docs.chunks])
+            if docs.bm25 is None or (not self.do_cache):
+                docs.bm25 = self.get_bm25([chunk.content for chunk in docs.chunks])
             bm25 = docs.bm25
         elif isinstance(docs, dict):
             bm25 = self.get_bm25(docs.values())
