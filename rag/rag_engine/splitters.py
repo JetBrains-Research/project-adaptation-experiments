@@ -56,6 +56,7 @@ class ModelSplitter(BaseSplitter):
 class WordSplitter(BaseSplitter):
     def generate_split(self, string: str) -> list[str]:
         tokens = re.findall(r"[\w]+", string)
+        tokens = [token for token in tokens if not token.isdigit()]
         return tokens
 
 
