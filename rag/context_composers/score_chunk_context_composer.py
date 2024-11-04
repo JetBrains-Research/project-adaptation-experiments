@@ -6,6 +6,8 @@ from rag.data_loading import (ChunkedRepo, FileStorage, RepoStorage,
 from rag.rag_engine.chunkers import BaseChunker
 from rag.rag_engine.scorers import BaseScorer
 
+from copy import deepcopy
+
 
 # TODO add others context composers
 class ChunkScoreComposer(BaseContextComposer):
@@ -80,7 +82,7 @@ class ChunkScoreComposer(BaseContextComposer):
             chunked_repo = cached_repo["cached_repo"]
         else:
             chunked_repo = self._get_chunks(repo_snapshot)
-            cached_repo = {"cached_repo": chunked_repo}
+            cached_repo = {"cached_repo": deepcopy(chunked_repo)}
 
         self.completion_last_chunk = FileStorage(
             filename=completion_item["filename"], content=completion_item["prefix"]
@@ -101,7 +103,6 @@ class ChunkScoreComposer(BaseContextComposer):
             chunked_completion = self.chunker.chunk(completion_before_chunk)
             chunked_repo.append(chunked_completion)
 
-        # TODO. Here we should be able to pass other amount from completion_chunk, not only last chunk
         scored_chunked_repo = self._score_chunks(
             self.completion_last_chunk.content, chunked_repo
         )

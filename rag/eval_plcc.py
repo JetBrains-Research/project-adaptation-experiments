@@ -106,8 +106,7 @@ def run_eval_plcc(config: DictConfig):
     # from tqdm import tqdm
     # for item in tqdm(dataloader):
     #     _ = item
-    # import sys
-    # sys.exit(0)
+    # return None
 
     evaluator.eval(dataloader, limit=config.limit)
     time.sleep(5)
