@@ -150,7 +150,7 @@ class ChunkedRepo:
         return ChunkedRepo(chunks=sorted_chunks[:k])
 
 
-def map_dp_to_dataclass(dp) -> RepoStorage:
+def map_dp_to_dataclass(dp: dict) -> RepoStorage:
     hf_repo_filename = dp.pop("repo_snapshot_filename", None)
     if hf_repo_filename is None:
         repo_snapshot = RepoStorage(**dp["repo_snapshot"])
