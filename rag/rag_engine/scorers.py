@@ -52,7 +52,7 @@ class BaseScorer:
 
 
 class IOUScorer(BaseScorer):
-    def __init__(self, splitter: BaseSplitter):
+    def __init__(self, splitter: BaseSplitter, **kwargs):
         super(IOUScorer, self).__init__(splitter)
 
     def score(self, list1: list[str | int], list2: list[str | int]):
