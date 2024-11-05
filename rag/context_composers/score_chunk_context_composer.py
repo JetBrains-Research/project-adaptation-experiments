@@ -79,7 +79,7 @@ class ChunkScoreComposer(BaseContextComposer):
         completion_item = self.completion_composer(datapoint, line_index)
 
         if cached_repo is not None:
-            chunked_repo = cached_repo["cached_repo"]
+            chunked_repo = deepcopy(cached_repo["cached_repo"])
         else:
             chunked_repo = self._get_chunks(repo_snapshot)
             cached_repo = {"cached_repo": deepcopy(chunked_repo)}
