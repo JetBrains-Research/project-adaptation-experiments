@@ -1,6 +1,8 @@
 import os
 import sys
 from pathlib import Path
+import gc
+import torch
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -110,6 +112,16 @@ def run_eval_plcc(config: DictConfig):
 
     evaluator.eval(dataloader, limit=config.limit)
     time.sleep(5)
+
+    # del generation_engine.llm.llm_engine.driver_worker
+    del generation_engine.llm
+    del generation_engine
+    gc.collect()
+    torch.cuda.empty_cache()
+    print("vLLM object is killed")
+
+    time.sleep(5)
+
 
 
 if __name__ == "__main__":
