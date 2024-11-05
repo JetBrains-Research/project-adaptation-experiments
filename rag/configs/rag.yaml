@@ -9,6 +9,6 @@ rag:
   n_grams_max: 1
   chunk_lines_size: 64 #[8, 16, 32, 64, 128]
   stride: null # -> stride size
-  set_stride: True
+  set_stride: False
   completion_last_chunk_size: 32
   chunk_completion_file: False
