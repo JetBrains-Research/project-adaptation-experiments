@@ -32,8 +32,10 @@ def get_free_gpus() -> list[int]:
 
     for i in range(gpu_count):
         handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+        memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        free_memory_percentage = (memory_info.free / memory_info.total)
         processes = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
-        if len(processes) == 0:
+        if len(processes) == 0 or free_memory_percentage > 0.9:
             free_gpus.append(i)
 
     if not nvml_was_inited:
