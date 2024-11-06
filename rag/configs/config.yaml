@@ -4,11 +4,11 @@ defaults:
   - rag
   - bug_localization
   - sweep
-  -
+
 # ! Uncomment this if you want to use multitask on multi-GPU
-#  - override hydra/launcher: joblib
-#hydra:
-# launcher:
-#   n_jobs: 3
+  - override hydra/launcher: joblib
+hydra:
+ launcher:
+   n_jobs: 2
 
 limit: -1

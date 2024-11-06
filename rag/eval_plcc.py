@@ -34,8 +34,8 @@ def run_eval_plcc(config: DictConfig):
     # python eval_plcc_on_rag.py limit=15
 
     # ! Uncomment this if you want to use multitask on multi-GPU
-    # job_id = HydraConfig.get().job.num
-    # set_gpu(job_id)
+    job_id = HydraConfig.get().job.num
+    set_gpu(job_id)
 
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
