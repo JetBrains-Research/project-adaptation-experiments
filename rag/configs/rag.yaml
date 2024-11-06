@@ -3,7 +3,7 @@ rag:
   top_k: -1
   splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
   scorer: "bm25" # ["bm25", "iou"]
-  chunker: "fixed_line" #["full_file", "fixed_line"]
+  chunker: "langchain" #["full_file", "fixed_line", "langchain"]
   use_n_grams: true
   n_grams_min: 1
   n_grams_max: 1

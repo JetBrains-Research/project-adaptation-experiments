@@ -1,4 +1,8 @@
 from rag.data_loading import ChunkedFile, ChunkedRepo, FileStorage, RepoStorage
+from langchain_text_splitters import (
+    Language,
+    RecursiveCharacterTextSplitter,
+)
 
 
 class BaseChunker:
@@ -50,15 +54,33 @@ class FixedLineChunker(BaseChunker):
         return ChunkedFile(file_st.filename, chunks)
 
 
+class LangChainChunker(BaseChunker):
+    def __init__(
+        self,
+        chunk_lines_size: int = 50,
+        chunk_overlap: int = 0,
+    ):
+        self.langchain_chunker = RecursiveCharacterTextSplitter.from_language(
+            language=Language.PYTHON, chunk_size=chunk_lines_size, chunk_overlap=chunk_overlap
+        )
+
+    def chunk(self, file_st: FileStorage) -> ChunkedFile:
+        chunks_docs = self.langchain_chunker.create_documents([file_st.content])
+        chunks = [doc.page_content for doc in chunks_docs]
+        return ChunkedFile(file_st.filename, chunks)
+
+
 def get_chunker(name: str, **kwargs) -> BaseChunker:
     chunker = None
-    available_instances = ["fixed_line", "full_file"]
+    available_instances = ["fixed_line", "full_file", "langchain"]
     if name not in available_instances:
         raise ValueError(
-            f"There is no {name} splitter. Only {available_instances} are available"
+            f"There is no {name} chunker. Only {available_instances} are available"
         )
     if name == "full_file":
         chunker = BaseChunker(**kwargs)
     elif name == "fixed_line":
         chunker = FixedLineChunker(**kwargs)
+    elif name == "langchain":
+        chunker = LangChainChunker(**kwargs)
     return chunker

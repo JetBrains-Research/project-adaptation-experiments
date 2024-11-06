@@ -41,6 +41,9 @@ def run_eval_plcc(config: DictConfig):
     config.output.results_filename = results_filename
     config_rag = config.rag
 
+    config_rag.chunk_lines_size *= 40
+    config_rag.completion_last_chunk_size *= 40
+
     if config_rag.set_stride:
         config_rag.stride = config_rag.chunk_lines_size // 2
 
@@ -95,7 +98,7 @@ def run_eval_plcc(config: DictConfig):
     scorer = get_scorer(config_rag.scorer, splitter=splitter, do_cache=do_cache)
     chunk_kwargs = {
         "chunk_lines_size": config_rag.chunk_lines_size,
-        "stride": config_rag.stride,
+        # "stride": config_rag.stride,
     }
     chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
 
