@@ -34,15 +34,12 @@ def run_eval_plcc(config: DictConfig):
     # python eval_plcc_on_rag.py limit=15
 
     # ! Uncomment this if you want to use multitask on multi-GPU
-    job_id = HydraConfig.get().job.num
-    set_gpu(job_id)
+    # job_id = HydraConfig.get().job.num
+    # set_gpu(job_id)
 
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
     config_rag = config.rag
-
-    config_rag.chunk_lines_size *= 40
-    config_rag.completion_last_chunk_size *= 40
 
     if config_rag.set_stride:
         config_rag.stride = config_rag.chunk_lines_size // 2
@@ -99,6 +96,7 @@ def run_eval_plcc(config: DictConfig):
     chunk_kwargs = {
         "chunk_lines_size": config_rag.chunk_lines_size,
         # "stride": config_rag.stride,
+        "language": config.data.language
     }
     chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
 

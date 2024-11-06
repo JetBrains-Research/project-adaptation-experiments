@@ -27,6 +27,7 @@ class FixedLineChunker(BaseChunker):
         chunk_lines_size: int = 32,
         stride: int = 8,
         filter_striped: bool = False,
+        **kwargs
     ):
         # if chunk_lines_size <= stride:
         #     raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
@@ -57,11 +58,15 @@ class FixedLineChunker(BaseChunker):
 class LangChainChunker(BaseChunker):
     def __init__(
         self,
-        chunk_lines_size: int = 50,
-        chunk_overlap: int = 0,
+        chunk_lines_size: int = 64,
+        chunk_overlap_lines: int = 0,
+        language: str = "python",
+        **kwargs
     ):
+        chunk_symb_size = 40*chunk_lines_size
+        chunk_overlap_symbols = 40*chunk_overlap_lines
         self.langchain_chunker = RecursiveCharacterTextSplitter.from_language(
-            language=Language.PYTHON, chunk_size=chunk_lines_size, chunk_overlap=chunk_overlap
+            language=Language(language), chunk_size=chunk_symb_size, chunk_overlap=chunk_overlap_symbols
         )
 
     def chunk(self, file_st: FileStorage) -> ChunkedFile:
