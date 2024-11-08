@@ -13,6 +13,7 @@ from rag.bug_localization.evaluator import evaluate_scorer, save_results
 from rag.bug_localization.load_data import load_data
 from rag.rag_engine.scorers import get_scorer
 from rag.rag_engine.splitters import get_splitter
+from rag.rag_engine.chunkers import get_chunker
 
 # TODO refactor
 
@@ -24,15 +25,22 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
 
     splitter = get_splitter(config_rag.splitter, model_name=config_rag.model)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
+    chunk_kwargs = {
+        "chunk_lines_size": config_rag.chunk_lines_size,
+        # "stride": config_rag.stride,
+        "language": config.data.language
+    }
+    chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
+
     dataset = load_data(["python", "java", "kotlin"])
     limit = config.limit
-    # limit = 5
+    limit = 10
 
     if exclusion(config.rag.scorer, config.rag.splitter, config.rag.n_grams_max):
         print("Skipping this configuration")
         return None
 
-    results, summary = evaluate_scorer(dataset, scorer, run_info, limit=limit)
+    results, summary = evaluate_scorer(dataset, chunker, scorer, run_info, limit=limit)
     save_results(
         results,
         summary,

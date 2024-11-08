@@ -1,12 +1,16 @@
 import time
 from pathlib import Path
+from collections import defaultdict
 
 import pandas as pd
 from tqdm import tqdm
 
 from rag.metrics.metrics import calc_f1, calc_ndcg
 
+from rag.data_loading import ChunkedRepo, FileStorage, RepoStorage
+
 COMMENT_SEPS = {"python": "#", "java": "//", "kotlin": "//"}
+LANG_EXT_MAP = {"python": "py", "kotlin": "kt", "java": "java"}
 
 
 def select_files(row: pd.Series) -> list[str]:
@@ -31,9 +35,9 @@ def ndcg_by_row(row: pd.Series) -> float:
     if len(scored_docs) <= 2:
         return 0
 
-    f1 = calc_ndcg(true_docs, scored_docs)
+    ndcg = calc_ndcg(true_docs, scored_docs)
 
-    return f1
+    return ndcg
 
 
 def ammend_repo_files(repo_content: dict[str, str], lang: str) -> dict[str, str]:
@@ -45,8 +49,30 @@ def ammend_repo_files(repo_content: dict[str, str], lang: str) -> dict[str, str]
 
     return corrected_repo
 
+ChunkListType = list[tuple[str, float]]
+def aggregate_and_sort_scores(docs: ChunkListType, method: str = 'max') -> dict[str, float]:
 
-def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
+    aggregated = defaultdict(list)
+    for filename, score in docs:
+        aggregated[filename].append(score)
+
+    def aggregate(scores: list[float]) -> float:
+        if method == 'max':
+            return max(scores)
+        elif method == 'min':
+            return min(scores)
+        elif method == 'mean':
+            return sum(scores) / len(scores)
+        else:
+            raise ValueError(f"Unsupported aggregation method: {method}")
+
+    aggregated_docs = [(filename, aggregate(scores)) for filename, scores in aggregated.items()]
+    aggregated_docs_sort = sorted(aggregated_docs, key=lambda x: x[1], reverse=True)
+
+    return dict(aggregated_docs_sort)
+
+
+def run_benchmark(dataset, chunker, scorer, limit=-1) -> pd.DataFrame:
     results_ds = list()
     i = 1
     for item in tqdm(dataset):
@@ -54,15 +80,19 @@ def run_benchmark(dataset, scorer, limit=-1) -> pd.DataFrame:
         repo_content = item["repo_content"]
         # Adding filenames to the repo content.
         repo_content = ammend_repo_files(repo_content, item["language"])
+        lang_ext = LANG_EXT_MAP[item["language"]]
+        repo_content = {file: content for file, content in repo_content.items() if content.strip() and file.endswith(f".{lang_ext}")}
         if len(repo_content) <= 2:
             continue
+        repo = RepoStorage(filename=list(repo_content.keys()), content=list(repo_content.values()))
+        repo_chunked = chunker(repo)
         start_time = time.time()
-        scores = scorer(issue_description, repo_content)
+        scores = scorer(issue_description, repo_chunked)
         end_time = time.time()
-        scored_files = {file: score for file, score in zip(repo_content.keys(), scores)}
-        scored_files = dict(
-            sorted(scored_files.items(), key=lambda kv: kv[1], reverse=True)
-        )
+        for chunk, score in zip(repo_chunked.chunks, scores):
+            chunk.score = score
+        scored_chunked_files = [(chunk.filename, chunk.score) for chunk in repo_chunked.chunks]
+        scored_files = aggregate_and_sort_scores(scored_chunked_files)
         item_copy = item.copy()
         del item_copy["repo_content"]
         item_copy["time_s"] = end_time - start_time
@@ -97,8 +127,8 @@ def add_metrics(results) -> tuple[pd.DataFrame, pd.DataFrame]:
     return results, summary
 
 
-def evaluate_scorer(dataset, scorer, meta_info: dict, limit=-1):
-    results = run_benchmark(dataset, scorer, limit)
+def evaluate_scorer(dataset, chunker, scorer, meta_info: dict, limit=-1):
+    results = run_benchmark(dataset, chunker, scorer, limit)
     results, summary = add_metrics(results)
 
     meta_info = {
