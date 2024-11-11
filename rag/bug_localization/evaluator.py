@@ -1,6 +1,7 @@
 import time
 from pathlib import Path
 from collections import defaultdict
+import statistics
 
 import pandas as pd
 from tqdm import tqdm
@@ -59,8 +60,8 @@ def aggregate_and_sort_scores(docs: ChunkListType, method: str = 'max') -> dict[
     def aggregate(scores: list[float]) -> float:
         if method == 'max':
             return max(scores)
-        elif method == 'min':
-            return min(scores)
+        elif method == 'median':
+            return statistics.median(scores)
         elif method == 'mean':
             return sum(scores) / len(scores)
         else:
@@ -72,7 +73,7 @@ def aggregate_and_sort_scores(docs: ChunkListType, method: str = 'max') -> dict[
     return dict(aggregated_docs_sort)
 
 
-def run_benchmark(dataset, chunker, scorer, limit=-1) -> pd.DataFrame:
+def run_benchmark(dataset, chunker, scorer, limit=-1, ) -> pd.DataFrame:
     results_ds = list()
     i = 1
     for item in tqdm(dataset):
@@ -92,7 +93,7 @@ def run_benchmark(dataset, chunker, scorer, limit=-1) -> pd.DataFrame:
         for chunk, score in zip(repo_chunked.chunks, scores):
             chunk.score = score
         scored_chunked_files = [(chunk.filename, chunk.score) for chunk in repo_chunked.chunks]
-        scored_files = aggregate_and_sort_scores(scored_chunked_files)
+        scored_files = aggregate_and_sort_scores(scored_chunked_files, method=chunker.score_agg)
         item_copy = item.copy()
         del item_copy["repo_content"]
         item_copy["time_s"] = end_time - start_time
@@ -130,14 +131,6 @@ def add_metrics(results) -> tuple[pd.DataFrame, pd.DataFrame]:
 def evaluate_scorer(dataset, chunker, scorer, meta_info: dict, limit=-1):
     results = run_benchmark(dataset, chunker, scorer, limit)
     results, summary = add_metrics(results)
-
-    meta_info = {
-        "scorer": meta_info["scorer"],
-        "splitter": meta_info["splitter"],
-        "use_n_grams": meta_info["use_n_grams"],
-        "n_grams_max": meta_info["n_grams_max"],
-        "n_grams_min": meta_info["n_grams_min"],
-    }
 
     print(f"Mean f1 = {summary['f1'][0]:.2f}")
     print(f"Mean ndcg = {summary['ndcg'][0]:.2f}")

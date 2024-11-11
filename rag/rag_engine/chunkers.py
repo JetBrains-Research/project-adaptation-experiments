@@ -7,7 +7,8 @@ from langchain_text_splitters import (
 
 class BaseChunker:
     def __init__(self, **kwargs):
-        pass
+        if "score_agg" in kwargs:
+            self.score_agg = kwargs["score_agg"]
 
     def chunk(self, file_st: FileStorage, **kwargs) -> ChunkedFile:
         return ChunkedFile(file_st.filename, [file_st.content])
@@ -22,15 +23,10 @@ class BaseChunker:
 
 
 class FixedLineChunker(BaseChunker):
-    def __init__(
-        self,
-        chunk_lines_size: int = 32,
-        stride: int = 8,
-        filter_striped: bool = False,
-        **kwargs
-    ):
+    def __init__(self, chunk_lines_size: int = 32, stride: int = 8, filter_striped: bool = False, **kwargs):
         # if chunk_lines_size <= stride:
         #     raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
+        super().__init__(**kwargs)
         self.chunk_lines_size = chunk_lines_size
         self.stride = stride
         if self.stride is None:
@@ -56,13 +52,8 @@ class FixedLineChunker(BaseChunker):
 
 
 class LangChainChunker(BaseChunker):
-    def __init__(
-        self,
-        chunk_lines_size: int = 64,
-        chunk_overlap_lines: int = 0,
-        language: str = "python",
-        **kwargs
-    ):
+    def __init__(self, chunk_lines_size: int = 64, chunk_overlap_lines: int = 0, language: str = "python", **kwargs):
+        super().__init__(**kwargs)
         chunk_symb_size = 40*chunk_lines_size
         chunk_overlap_symbols = 40*chunk_overlap_lines
         self.langchain_chunker = RecursiveCharacterTextSplitter.from_language(

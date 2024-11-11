@@ -22,25 +22,27 @@ from rag.rag_engine.chunkers import get_chunker
 def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
     config_rag = config.rag
     run_info = get_info_dict(config)
+    del run_info["language"]
 
     splitter = get_splitter(config_rag.splitter, model_name=config_rag.model)
     scorer = get_scorer(config_rag.scorer, splitter=splitter)
     chunk_kwargs = {
         "chunk_lines_size": config_rag.chunk_lines_size,
         # "stride": config_rag.stride,
-        "language": config.data.language
+        "language": config.data.language,
+        "score_agg": config_rag.chunk_score_agg
     }
     chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
 
     dataset = load_data(["python", "java", "kotlin"])
-    limit = config.limit
-    limit = 10
+    # import random
+    # random.shuffle(dataset)
 
     if exclusion(config.rag.scorer, config.rag.splitter, config.rag.n_grams_max):
         print("Skipping this configuration")
         return None
 
-    results, summary = evaluate_scorer(dataset, chunker, scorer, run_info, limit=limit)
+    results, summary = evaluate_scorer(dataset, chunker, scorer, run_info, limit=config.limit)
     save_results(
         results,
         summary,
