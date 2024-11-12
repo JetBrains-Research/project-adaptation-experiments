@@ -155,6 +155,7 @@ class Generator(object):
                 # (module, name)
                 info = tuple(item[:2])
                 # pos: smaller is better (the lineno of import statements)
+                # TODO I do not understand, how pos[0]  can be other than 1
                 pos = (1, item[2])
                 if info not in other_imported_dict:
                     other_imported_dict[info] = pos
@@ -166,6 +167,7 @@ class Generator(object):
         max_prompt_length = self.tokenizer.cal_prompt_max_length(completion_prefix, suffix)
 
         # prompt from Part 1
+        # TODO What is it? the prompt is overwritten by following code (Part 2)
         imported_info = self.sort_by_lineno([(k[0], k[1], v) for k, v in imported_dict.items()])
         node_list = self.get_cross_file_nodes(fpath, imported_info)
         prompt = self.get_prompt(node_list)
@@ -181,10 +183,12 @@ class Generator(object):
             imported_info = self.sort_by_lineno([(k[0], k[1], v) for k, v in imported_dict.items()])
             node_list = self.get_cross_file_nodes(fpath, imported_info)
             new_prompt = self.get_prompt(node_list)
+            # TODO. so, we are accumulating the nodes waiting untill it length exceeds some threshold
+            #  But there is a error here. If the very first prompt is large, then the loop will not stop
+            # TODO I prefer to return just sorted filenames with their content, so the composer can then merge them into context.
             if len(prompt) > 0 and not self.tokenizer.judge_prompt(new_prompt, max_prompt_length):
                 break
-            
-            # TODO. Why this overrides prompt, not adds to it?
+
             prompt = new_prompt
 
         # Is it some smart truncation? Do we need it?
