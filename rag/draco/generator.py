@@ -121,6 +121,7 @@ class Generator(object):
                 cross_import_nodes.add(k)
 
         # Part1: imported information from last k lines
+        # TODO don't we want to do it a tunable parameter?
         variable_nodes = graph.get_last_k_lines(LAST_K_LINES)
         related_nodes = graph.get_related_nodes(variable_nodes, reverse=True, limit_assign=limit_assign)
         proj_nodes = set(related_nodes) & cross_import_nodes
@@ -183,6 +184,8 @@ class Generator(object):
             if len(prompt) > 0 and not self.tokenizer.judge_prompt(new_prompt, max_prompt_length):
                 break
             
+            # TODO. Why this overrides prompt, not adds to it?
             prompt = new_prompt
-        
+
+        # Is it some smart truncation? Do we need it?
         return self.tokenizer.truncate_concat(completion_prefix, prompt, suffix)

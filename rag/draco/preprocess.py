@@ -65,7 +65,8 @@ class projectParser(object):
                     else:
                         info_dict["import"] = judge_res
 
-    def _get_all_module_path(self, file_list):
+    def _get_all_module_path(self, file_list) -> dict[set[str]]:
+        # Returns dict {folder name: }.
         py_dict = {}
 
         for file in file_list:
@@ -92,7 +93,7 @@ class projectParser(object):
         return fpath.replace(os.sep, '.')
 
 
-    def parse_dir(self, repo_info):
+    def parse_dir(self, repo_info: dict):
         '''
         Return: {module: {
             name: {
@@ -109,7 +110,8 @@ class projectParser(object):
             }}
         '''
         self.set_proj_dir(repo_info['repo'])
-        repo_snapshot = {filename: content \
+        # repo snapshots, comtaining .py files
+        repo_snapshot: dict[str, str] = {filename: content \
                          for (filename, content) in zip(repo_info['repo_snapshot']['filename'], repo_info['repo_snapshot']['content']) \
                          if filename.endswith('.py')}
         
