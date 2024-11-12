@@ -185,7 +185,9 @@ class Generator(object):
             new_prompt = self.get_prompt(node_list)
             # TODO. so, we are accumulating the nodes waiting untill it length exceeds some threshold
             #  But there is a error here. If the very first prompt is large, then the loop will not stop
-            # TODO I prefer to return just sorted filenames with their content, so the composer can then merge them into context.
+            # TODO I prefer to return just sorted filenames with their content, so the composer can then merge them into context
+            #  or, may be it is easier, we can pass final prompt.
+            #  Question: how files are sorted: best at the end of the prompt or at the beginining?
             if len(prompt) > 0 and not self.tokenizer.judge_prompt(new_prompt, max_prompt_length):
                 break
 
