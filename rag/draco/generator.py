@@ -4,7 +4,6 @@ import json
 from rag.draco.graph import tGraph
 from rag.draco.extract_dataflow import PythonParser
 from rag.draco.node_prompt import projectSearcher
-from rag.draco.tokenizer import ModelTokenizer
 from rag.draco.utils import MAX_HOP, ONLY_DEF, ENABLE_DOCSTRING, LAST_K_LINES
 
 
@@ -105,6 +104,7 @@ class Generator(object):
         
         self._set_project(project)        
         self.searcher.set_proj(datapoint['repo'], self.proj_info)
+        # TODO what is it?
         # self.set_pyfile(project, datapoint['completion_file']['filename'])
 
         fpath = self._get_module_name(datapoint['completion_file']['filename'])
@@ -161,11 +161,6 @@ class Generator(object):
                     other_imported_dict[info] = pos
                 else:
                     other_imported_dict[info] = min(other_imported_dict[info], pos)
-        
-        # get maximum prompt length
-        suffix = self.get_suffix(fpath)
-        # TODO delete
-        # max_prompt_length = self.tokenizer.cal_prompt_max_length(completion_prefix, suffix)
 
         # prompt from Part 1
         # TODO What is it? the prompt is overwritten by following code (Part 2)
@@ -181,17 +176,9 @@ class Generator(object):
             else:
                 imported_dict[item] = min(imported_dict[item], other_imported_dict[item])
 
+        if len(sorted_others) > 0:
             imported_info = self.sort_by_lineno([(k[0], k[1], v) for k, v in imported_dict.items()])
             node_list = self.get_cross_file_nodes(fpath, imported_info)
-            new_prompt = self.get_prompt(node_list)
-            # TODO. so, we are accumulating the nodes waiting until it length exceeds some threshold
-            #  But there is a error here. If the very first prompt is large, then the loop will not stop
-            # TODO I prefer to return just sorted filenames with their content, so the composer can then merge them into context
-            #  Question: how files are sorted: best at the end of the prompt or at the beginining?
-            # TODO check two options or file ordering
+            prompt = self.get_prompt(node_list)
 
-            prompt = new_prompt
-
-        # TODO Return text, not tokenization and truncation
         return prompt
-        # return self.tokenizer.truncate_concat(completion_prefix, prompt, suffix)
