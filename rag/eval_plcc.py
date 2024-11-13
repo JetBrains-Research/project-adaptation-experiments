@@ -50,24 +50,6 @@ def run_eval_plcc(config: DictConfig):
         print("Skipping this configuration")
         return None
 
-    run_info = get_info_dict(config)
-    vllm_args = dict(config.vllm.vllm_args) if config.vllm.vllm_args is not None else {}
-    generation_engine = VllmEngine(
-        hf_model_path=config.model.model_name_or_path,
-        model_name=config.model.get("model_name"),
-        context_size=max(config.eval.context_size_list),
-        vllm_args=vllm_args,
-        generation_args=dict(config.vllm.generation_args),
-    )
-    evaluator = Evaluator(
-        engine=generation_engine,
-        result_folder=config.output.result_folder,
-        result_filename=config.output.results_filename,
-        log_model_inputs=config.eval.log_model_inputs,
-        config=config,
-        run_info=run_info,
-    )
-
     print(40 * "-")
     print(f"Composer - {config.data.composer_name}")
     print(f"Model - {config.model.model_name_or_path}")
@@ -120,6 +102,24 @@ def run_eval_plcc(config: DictConfig):
     # for item in tqdm(dataloader):
     #     _ = item
     # return None
+
+    run_info = get_info_dict(config)
+    vllm_args = dict(config.vllm.vllm_args) if config.vllm.vllm_args is not None else {}
+    generation_engine = VllmEngine(
+        hf_model_path=config.model.model_name_or_path,
+        model_name=config.model.get("model_name"),
+        context_size=max(config.eval.context_size_list),
+        vllm_args=vllm_args,
+        generation_args=dict(config.vllm.generation_args),
+    )
+    evaluator = Evaluator(
+        engine=generation_engine,
+        result_folder=config.output.result_folder,
+        result_filename=config.output.results_filename,
+        log_model_inputs=config.eval.log_model_inputs,
+        config=config,
+        run_info=run_info,
+    )
 
     evaluator.eval(dataloader, limit=config.limit)
     time.sleep(5)
