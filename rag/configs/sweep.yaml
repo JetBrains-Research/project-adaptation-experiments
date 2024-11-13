@@ -2,8 +2,3 @@ hydra:
     mode: MULTIRUN
     sweeper:
         params:
-          # ++rag.splitter: word_splitter, model_tokenizer, line_splitter
-          # ++rag.scorer: iou, bm25
-          # ++rag.n_grams_max: 1, 2, 3
-          ++rag.chunk_lines_size: 8, 16, 32, 64, 128
-          # ++rag.chunk_completion_file: True, False
