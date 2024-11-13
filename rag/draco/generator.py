@@ -164,6 +164,7 @@ class Generator(object):
         
         # get maximum prompt length
         suffix = self.get_suffix(fpath)
+        # TODO delete
         max_prompt_length = self.tokenizer.cal_prompt_max_length(completion_prefix, suffix)
 
         # prompt from Part 1
@@ -183,15 +184,13 @@ class Generator(object):
             imported_info = self.sort_by_lineno([(k[0], k[1], v) for k, v in imported_dict.items()])
             node_list = self.get_cross_file_nodes(fpath, imported_info)
             new_prompt = self.get_prompt(node_list)
-            # TODO. so, we are accumulating the nodes waiting untill it length exceeds some threshold
+            # TODO. so, we are accumulating the nodes waiting until it length exceeds some threshold
             #  But there is a error here. If the very first prompt is large, then the loop will not stop
             # TODO I prefer to return just sorted filenames with their content, so the composer can then merge them into context
-            #  or, may be it is easier, we can pass final prompt. But I prefer first option
             #  Question: how files are sorted: best at the end of the prompt or at the beginining?
-            if len(prompt) > 0 and not self.tokenizer.judge_prompt(new_prompt, max_prompt_length):
-                break
+            # TODO check two options or file ordering
 
             prompt = new_prompt
 
-        # Is it some smart truncation? Do we need it?
+        # TODO Return text, not tokenization and truncation
         return self.tokenizer.truncate_concat(completion_prefix, prompt, suffix)

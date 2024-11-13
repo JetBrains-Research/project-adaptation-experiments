@@ -290,6 +290,7 @@ class projectSearcher(object):
 
 
     def get_path_comment(self, fpath):
+        # TODO remove comment to return filepath
         return f"# {fpath.replace('.', os.sep)}.py\n"
 
 
@@ -303,6 +304,8 @@ class projectSearcher(object):
         
         path_comment = self.get_path_comment(fpath)
 
+        # TODO return dict {filepath: content}
+        # TODO be careful, there are more than one return
         if '' in name_set or None in name_set:
             # the whole module
             return path_comment + self._get_module_prompt(file_info, name_set, only_def, enable_docstring)
@@ -510,4 +513,5 @@ class projectSearcher(object):
             prompt_list.append(self.get_prompt4names(fpath, node_dict[fpath], only_def, enable_docstring))
         
         # replece the docsting
+        # TODO return dict {filepath: content}
         return '\n\n'.join(prompt_list).replace("'''", '"""')
