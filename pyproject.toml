@@ -7,7 +7,7 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-kotlineval = {version = "^0.1.1", source = "space-kotlin-eval"}
+kotlineval = {version = "^0.1.1", source = "space-kotlin-eval", python = ">=3.9,<4.0.0"}
 
 [build-system]
 requires = ["poetry-core"]

@@ -23,6 +23,8 @@ from rag_engine.scorers import get_scorer
 from rag_engine.splitters import get_splitter
 from gpu_distributor import set_gpu
 
+from draco.preprocess import generate_draco_graph
+
 """
 CUDA_VISIBLE_DEVICES=1 python3 eval_plcc_on_rag.py limit=4
 """
@@ -69,40 +71,48 @@ def run_eval_plcc(config: DictConfig):
     print(40 * "-")
     print(f"Composer - {config.data.composer_name}")
     print(f"Model - {config.model.model_name_or_path}")
-    print(f"Scorer - {config_rag.scorer}")
-    print(f"Splitter - {config_rag.splitter}")
-    print(f"Chunker - {config_rag.chunker}")
-    print(f"use_n_grams - {config_rag.use_n_grams}")
-    if config_rag.use_n_grams:
-        print(f"n_grams_max - {config_rag.n_grams_max}")
-    print(f"chunk_lines_size - {config_rag.chunk_lines_size}")
-    print(f"set_stride - {config_rag.set_stride}")
-    if config_rag.set_stride:
-        print(f"stride - {config_rag.stride}")
 
-    print(f"chunk_completion_file - {config_rag.chunk_completion_file}")
-    print(f"completion_last_chunk_size - {config_rag.completion_last_chunk_size}")
+    if config.data.composer_name != "draco":
+        print(f"Scorer - {config_rag.scorer}")
+        print(f"Splitter - {config_rag.splitter}")
+        print(f"Chunker - {config_rag.chunker}")
+        print(f"use_n_grams - {config_rag.use_n_grams}")
+        if config_rag.use_n_grams:
+            print(f"n_grams_max - {config_rag.n_grams_max}")
+        print(f"chunk_lines_size - {config_rag.chunk_lines_size}")
+        print(f"set_stride - {config_rag.set_stride}")
+        if config_rag.set_stride:
+            print(f"stride - {config_rag.stride}")
+
+        print(f"chunk_completion_file - {config_rag.chunk_completion_file}")
+        print(f"completion_last_chunk_size - {config_rag.completion_last_chunk_size}")
     
-    # TODO may be make more concise?
-    splitter = get_splitter(
-        config_rag.splitter,
-        model_name=config_rag.model,
-        use_n_grams=config_rag.use_n_grams,
-        n_grams_min=config_rag.n_grams_min,
-        n_grams_max=config_rag.n_grams_max,
-    )
-    do_cache = (not config_rag.chunk_completion_file) or (config_rag.chunker == "full_file")
-    scorer = get_scorer(config_rag.scorer, splitter=splitter, do_cache=do_cache)
-    chunk_kwargs = {
-        "chunk_lines_size": config_rag.chunk_lines_size,
-        # "stride": config_rag.stride,
-        "language": config.data.language
-    }
-    chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
+        # TODO may be make more concise?
+        splitter = get_splitter(
+            config_rag.splitter,
+            model_name=config_rag.model,
+            use_n_grams=config_rag.use_n_grams,
+            n_grams_min=config_rag.n_grams_min,
+            n_grams_max=config_rag.n_grams_max,
+        )
+        do_cache = (not config_rag.chunk_completion_file) or (config_rag.chunker == "full_file")
+        scorer = get_scorer(config_rag.scorer, splitter=splitter, do_cache=do_cache)
+        chunk_kwargs = {
+            "chunk_lines_size": config_rag.chunk_lines_size,
+            # "stride": config_rag.stride,
+            "language": config.data.language
+        }
+        chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
 
-    context_composer = get_composer(
-        config, chunker=chunker, scorer=scorer, config_rag=config.rag
-    )
+        context_composer = get_composer(
+            config, chunker=chunker, scorer=scorer, config_rag=config.rag
+        )
+    else:
+        # create Dataflow Graph if it doesn't exist
+        if not os.path.exists("draco/DRACO_Graph"):
+            generate_draco_graph()
+
+        context_composer = get_composer(config)
 
     dataloader = get_dataloader(config, context_composer)
 
