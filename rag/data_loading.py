@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Iterator
 
 import rank_bm25
+from llama_index.core.base.base_retriever import BaseRetriever
 
 
 @dataclass
@@ -118,6 +119,7 @@ class ChunkedFile:
 class ChunkedRepo:
     chunks: list[Chunk] | None = None
     bm25: rank_bm25.BM25Okapi | None = None
+    dense_retriever: BaseRetriever | None = None
 
     def __post_init__(self):
         if self.chunks is None:

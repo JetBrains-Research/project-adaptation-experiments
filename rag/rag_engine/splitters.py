@@ -7,8 +7,8 @@ class BaseSplitter:
     def __init__(
         self,
         use_n_grams: bool = False,
-        n_grams_min: int = -1,
-        n_grams_max: int = -1,
+        n_grams_min: int = 1,
+        n_grams_max: int = 1,
         **kwargs,
     ):
         self.use_n_grams = use_n_grams
