@@ -10,7 +10,11 @@ from rag.context_composers.draco_context_composer import \
 
 def get_composer(config, **kwargs) -> BaseContextComposer:
     if config.data.composer_name == "chunk_score":
-        context_composer = ChunkScoreComposer(language=config.data.language, **kwargs)
+        context_composer = ChunkScoreComposer(
+            language=config.data.language,
+            allowed_extensions=config.data.allowed_extensions,
+            **kwargs
+        )
     elif config.data.composer_name == "from_file":
         context_composer = FromFileComposer(
             language=config.data.language,

@@ -24,7 +24,7 @@ class BaseChunker:
 
 
 class FixedLineChunker(BaseChunker):
-    def __init__(self, chunk_lines_size: int = 32, stride: int = 8, filter_striped: bool = False, **kwargs):
+    def __init__(self, chunk_lines_size: int = 32, stride: int | None = None, filter_striped: bool = False, **kwargs):
         # if chunk_lines_size <= stride:
         #     raise ValueError("chunk_lines_size must be greater than overlap_lines_size")
         super().__init__(**kwargs)

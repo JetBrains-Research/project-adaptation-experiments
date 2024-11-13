@@ -36,6 +36,7 @@ class ChunkScoreComposer(BaseContextComposer):
         self.chunk_completion_file = config_rag.chunk_completion_file
         if self.chunk_completion_file:
             self.completion_last_chunk_size = config_rag.completion_last_chunk_size
+        self.counter = 0
 
     @staticmethod
     def merge_chunks(chunked_repo: ChunkedRepo) -> str:
@@ -83,7 +84,6 @@ class ChunkScoreComposer(BaseContextComposer):
         else:
             chunked_repo = self._get_chunks(repo_snapshot)
             cached_repo = {"cached_repo": deepcopy(chunked_repo)}
-
         self.completion_last_chunk = FileStorage(
             filename=completion_item["filename"], content=completion_item["prefix"]
         )
@@ -96,14 +96,16 @@ class ChunkScoreComposer(BaseContextComposer):
                 content="\n".join(completion_lines[-self.completion_last_chunk_size :]),
             )
 
-            completion_before_chunk = FileStorage(
-                filename=completion_item["filename"],
-                content="\n".join(completion_lines[:-self.completion_last_chunk_size]),
-            )
-            chunked_completion = self.chunker.chunk(completion_before_chunk)
-            chunked_repo.append(chunked_completion)
-            # TODO Duplicated operation. Think about refactoring.
-            chunked_repo.deduplicate_chunks()
+
+            if len(completion_lines) > self.completion_last_chunk_size:
+                completion_before_chunk = FileStorage(
+                    filename=completion_item["filename"],
+                    content="\n".join(completion_lines[:-self.completion_last_chunk_size]),
+                )
+                chunked_completion = self.chunker.chunk(completion_before_chunk)
+                chunked_repo.append(chunked_completion)
+                # TODO Duplicated operation. Think about refactoring.
+                chunked_repo.deduplicate_chunks()
         scored_chunked_repo = self._score_chunks(
             self.completion_last_chunk.content, chunked_repo
         )
@@ -115,6 +117,7 @@ class ChunkScoreComposer(BaseContextComposer):
         self, datapoint: dict, line_index: int, cached_repo: dict | None = None
     ) -> tuple[dict[str, str], dict | None]:
         context, cached_repo = self.context_composer(datapoint, line_index, cached_repo)
+        self.counter += 1
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
             self.completion_last_chunk.filename
