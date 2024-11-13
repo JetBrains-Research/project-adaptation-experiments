@@ -102,7 +102,8 @@ class ChunkScoreComposer(BaseContextComposer):
             )
             chunked_completion = self.chunker.chunk(completion_before_chunk)
             chunked_repo.append(chunked_completion)
-
+            # TODO Duplicated operation. Think about refactoring.
+            chunked_repo.deduplicate_chunks()
         scored_chunked_repo = self._score_chunks(
             self.completion_last_chunk.content, chunked_repo
         )

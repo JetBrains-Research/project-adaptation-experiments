@@ -5,11 +5,27 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.schema import TextNode
 from llama_index.core import VectorStoreIndex
 from llama_index.core.base.base_retriever import BaseRetriever
-import numpy as np
+
+import contextlib
+import sys
+import os
 
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
 
+
+@contextlib.contextmanager
+def disable_tqdm():
+    with open(os.devnull, 'w') as devnull:
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        sys.stdout = devnull
+        sys.stderr = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
 
 class BaseScorer:
     def __init__(self, splitter: BaseSplitter = None):
@@ -77,8 +93,7 @@ class IOUScorer(BaseScorer):
 
 
 class BM25Scorer(BaseScorer):
-
-    def __init__(self, splitter: BaseSplitter, do_cache = True, **kwargs):
+    def __init__(self, splitter: BaseSplitter, do_cache=True, **kwargs):
         super(BM25Scorer, self).__init__(splitter)
         self.do_cache = do_cache
 
@@ -108,25 +123,17 @@ class BM25Scorer(BaseScorer):
 
 
 class EmbedScorer(BaseScorer):
-
-    def __init__(self, embed_model_name, do_cache = True, **kwargs):
+    def __init__(self, embed_model_name, do_cache=True, **kwargs):
         self.do_cache = do_cache
         # TODO check that the model max_length is larger than chunk length
-        self.embed_model = HuggingFaceEmbedding(embed_model_name, embed_batch_size=1000)
+        self.embed_model = HuggingFaceEmbedding(embed_model_name, embed_batch_size=100)
         # model_name="intfloat/multilingual-e5-small"
 
     def get_retriever(self, docs: list[str]) -> BaseRetriever:
-
-        embeddings = self.embed_model._get_text_embeddings(docs)
-        nodes = []
-        for chunk in docs:
-            node_embedding = self.embed_model.get_text_embedding(chunk)
-            node = TextNode(text=chunk)
-            node.embedding = np.array(node_embedding)
-            nodes.append(node)
-
-        index = VectorStoreIndex(nodes, embed_model=self.embed_model)
-        retriever = index.as_retriever(similarity_top_k=len(docs), verbose=False)
+        nodes = [TextNode(text=chunk) for chunk in docs]
+        with disable_tqdm():
+            index = VectorStoreIndex(nodes, embed_model=self.embed_model, show_progress=False)
+            retriever = index.as_retriever(similarity_top_k=len(docs), verbose=False, show_progress=False)
 
         return retriever
 
@@ -134,17 +141,20 @@ class EmbedScorer(BaseScorer):
         if isinstance(docs, ChunkedRepo):
             # Init vector base
             if docs.dense_retriever is None or (not self.do_cache):
-                docs.dense_retriever = self.get_retriever([chunk.content for chunk in docs.chunks])
+                docs.dense_retriever = self.get_retriever(
+                    [chunk.content for chunk in docs.chunks]
+                )
             retriever = docs.dense_retriever
         elif isinstance(docs, dict):
             retriever = self.get_retriever(list(docs.values()))
         else:
             raise TypeError("Unsupported docs type")
 
-        scored_chunks = retriever.retrieve(query)
+        with disable_tqdm():
+            scored_chunks = retriever.retrieve(query)
         scores = [chunk.score for chunk in scored_chunks]
-
         return scores
+
 
 def get_scorer(name: str, **kwargs) -> BaseScorer:
     if name == "iou":

@@ -78,7 +78,10 @@ def run_eval_plcc(config: DictConfig):
             n_grams_max=config_rag.n_grams_max,
         )
         do_cache = (not config_rag.chunk_completion_file) or (config_rag.chunker == "full_file")
-        scorer = get_scorer(config_rag.scorer, splitter=splitter, do_cache=do_cache)
+        scorer = get_scorer(config_rag.scorer,
+                            splitter=splitter,
+                            embed_model_name=config_rag.embed_model,
+                            do_cache=do_cache)
         chunk_kwargs = {
             "chunk_lines_size": config_rag.chunk_lines_size,
             # "stride": config_rag.stride,

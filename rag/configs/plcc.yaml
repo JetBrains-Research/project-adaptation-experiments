@@ -5,7 +5,7 @@ data:
   language: "python" # "python", "kotlin"
   dataset_name: null
   # composer_name ["path_distance", "iou_chunk_score", "iou_file_score", "from_file", "no_context", "kl_chunk_score", "draco"]
-  composer_name: "draco"
+  composer_name: "chunk_score"
   topk: -1
   # composer_dataset_file: "/mnt/data/galimzyanov/long-contex-eval/datasets/plcc_optimal_medium_unique.jsonl"
   # composer_dataset_file: "/mnt/data/galimzyanov/long-contex-eval/datasets/plcc_medium_pathdist_olga.jsonl"

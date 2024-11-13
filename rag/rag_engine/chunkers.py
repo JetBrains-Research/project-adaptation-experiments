@@ -19,6 +19,7 @@ class BaseChunker:
             if len(file_st.content.strip()) > 1:
                 chunked_file = self.chunk(file_st, **chunking_kwargs)
                 chunked_repo.append(chunked_file)
+                chunked_repo.deduplicate_chunks()
         return chunked_repo
 
 

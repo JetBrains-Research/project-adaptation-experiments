@@ -142,14 +142,28 @@ class ChunkedRepo:
 
     def set_scores(self, scores: list[float]):
         if len(scores) != len(self.chunks):
-            raise ValueError("Scores must correspond to chunks")
+            raise ValueError(f"Scores must correspond to chunks. scores len = {len(scores)}, chunks = {len(self.chunks)}")
         for score, chunk in zip(scores, self.chunks):
             chunk.score = score
 
     def top_k(self, k: int = 10) -> "ChunkedRepo":
         chunks = self.chunks
         sorted_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
-        return ChunkedRepo(chunks=sorted_chunks[:k])
+        if k > 0:
+            return ChunkedRepo(chunks=sorted_chunks[:k])
+        else:
+            return ChunkedRepo(chunks=sorted_chunks)
+
+    def deduplicate_chunks(self):
+        seen: set[str] = set()
+        unique_chunks: list[Chunk] = []
+
+        for chunk in self.chunks:
+            if chunk.content not in seen:
+                unique_chunks.append(chunk)
+                seen.add(chunk.content)
+
+        self.chunks = unique_chunks
 
 
 def map_dp_to_dataclass(dp: dict) -> RepoStorage:
