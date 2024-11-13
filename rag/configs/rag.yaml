@@ -8,6 +8,7 @@ rag:
   n_grams_min: 1
   n_grams_max: 1
   chunk_lines_size: 64 #[8, 16, 32, 64, 128]
+  chunk_score_agg: "max"
   stride: null # -> stride size
   set_stride: False
   completion_last_chunk_size: 32
