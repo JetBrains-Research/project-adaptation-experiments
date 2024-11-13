@@ -4,6 +4,8 @@ from kotlineval.data.plcc.context_composer import PathDistanceComposer
 from rag.context_composers.from_file_context_composer import FromFileComposer
 from rag.context_composers.score_chunk_context_composer import \
     ChunkScoreComposer
+from rag.context_composers.draco_context_composer import \
+    DracoComposer
 
 
 def get_composer(config, **kwargs) -> BaseContextComposer:
@@ -26,6 +28,12 @@ def get_composer(config, **kwargs) -> BaseContextComposer:
             allowed_extensions=config.data.allowed_extensions,
             completion_categories=config.data.completion_categories,
             topk=config.data.topk,
+        )
+    elif config.data.composer_name == "draco":
+        context_composer = DracoComposer(
+            language=config.data.language,
+            completion_categories=config.data.completion_categories,
+            model_name=config.model.model_name_or_path,
         )
     else:
         raise ValueError(f"There is no {config.data.composer_name} composer")
