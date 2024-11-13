@@ -291,7 +291,8 @@ class projectSearcher(object):
 
     def get_path_comment(self, fpath):
         # TODO remove comment to return filepath
-        return f"# {fpath.replace('.', os.sep)}.py\n"
+        # return f"# {fpath.replace('.', os.sep)}.py\n"
+        return f"{fpath.replace('.', os.sep)}.py"
 
 
     def get_prompt4names(self, fpath, name_set, only_def=True, enable_docstring=True):
@@ -308,7 +309,7 @@ class projectSearcher(object):
         # TODO be careful, there are more than one return
         if '' in name_set or None in name_set:
             # the whole module
-            return path_comment + self._get_module_prompt(file_info, name_set, only_def, enable_docstring)
+            return {path_comment : [self._get_module_prompt(file_info, name_set, only_def, enable_docstring)]}
 
         cls_dict = {}
         global_names = set()
@@ -363,7 +364,7 @@ class projectSearcher(object):
                     prompt_list.append(self._get_class_prompt(file_info, name, cls_dict, name_set, only_def=only_def, enable_docstring=enable_docstring))
 
         prompt_list = [x.rstrip() for x in prompt_list]
-        return path_comment + '\n'.join(prompt_list)
+        return {path_comment : ['\n'.join(prompt_list)]}
 
 
     def pseudo_topo_sort(self, fpath_set, file_edges, fpath_order):
@@ -508,10 +509,13 @@ class projectSearcher(object):
 
         sorted_files = self.pseudo_topo_sort(set(node_dict), file_edges, fpath_order)
 
-        prompt_list = []
+        # prompt_list = []
+        context_files = {}
         for fpath in sorted_files:
-            prompt_list.append(self.get_prompt4names(fpath, node_dict[fpath], only_def, enable_docstring))
-        
+            # prompt_list.append(self.get_prompt4names(fpath, node_dict[fpath], only_def, enable_docstring))
+            context_files.update(self.get_prompt4names(fpath, node_dict[fpath], only_def, enable_docstring))
+
         # replece the docsting
         # TODO return dict {filepath: content}
-        return '\n\n'.join(prompt_list).replace("'''", '"""')
+        # return '\n\n'.join(prompt_list).replace("'''", '"""')
+        return context_files

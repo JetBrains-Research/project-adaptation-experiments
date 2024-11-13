@@ -10,4 +10,4 @@ import os
 DS_BASE_DIR = os.path.abspath("../data")
 DS_REPO_DIR = os.path.join(DS_BASE_DIR, "Source_Code")
 DS_FILE = os.path.join(DS_BASE_DIR, "metadata.jsonl")
-DS_GRAPH_DIR = "draco/DRACO_Graph"
+DS_GRAPH_DIR = "/home/kolomyttseva/Git/project-adaptation-experiments/rag/draco/DRACO_Graph"

@@ -1,11 +1,11 @@
 import os
 import json
 
-from draco.graph import tGraph
-from draco.extract_dataflow import PythonParser
-from draco.node_prompt import projectSearcher
-from draco.tokenizer import ModelTokenizer
-from draco.utils import MAX_HOP, ONLY_DEF, ENABLE_DOCSTRING, LAST_K_LINES
+from rag.draco.graph import tGraph
+from rag.draco.extract_dataflow import PythonParser
+from rag.draco.node_prompt import projectSearcher
+from rag.draco.tokenizer import ModelTokenizer
+from rag.draco.utils import MAX_HOP, ONLY_DEF, ENABLE_DOCSTRING, LAST_K_LINES
 
 
 class Generator(object):
@@ -15,7 +15,7 @@ class Generator(object):
         self.info_dir = os.path.abspath(info_dir)
 
         self.searcher = projectSearcher()
-        self.tokenizer = ModelTokenizer(model)
+        # self.tokenizer = ModelTokenizer(model)
 
         self.project = None
         self.proj_info = None
@@ -97,7 +97,7 @@ class Generator(object):
         return self.searcher.get_prompt(node_list, MAX_HOP, ONLY_DEF, ENABLE_DOCSTRING)
 
 
-    def retrieve_prompt(self, datapoint: dict, completion_prefix: str):
+    def retrieve_prompt(self, datapoint: dict, completion_prefix: str) -> dict[str, list[str]]:
         '''
         last k lines + other import nodes until maximum length, only type-sensitive rels for k lines
         '''
@@ -165,7 +165,7 @@ class Generator(object):
         # get maximum prompt length
         suffix = self.get_suffix(fpath)
         # TODO delete
-        max_prompt_length = self.tokenizer.cal_prompt_max_length(completion_prefix, suffix)
+        # max_prompt_length = self.tokenizer.cal_prompt_max_length(completion_prefix, suffix)
 
         # prompt from Part 1
         # TODO What is it? the prompt is overwritten by following code (Part 2)
@@ -193,4 +193,5 @@ class Generator(object):
             prompt = new_prompt
 
         # TODO Return text, not tokenization and truncation
-        return self.tokenizer.truncate_concat(completion_prefix, prompt, suffix)
+        return prompt
+        # return self.tokenizer.truncate_concat(completion_prefix, prompt, suffix)
