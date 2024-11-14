@@ -36,8 +36,7 @@ class BaseScorer:
 
     def score_repo(
         self, completion_prefix: str, chunked_repo: ChunkedRepo
-    ) -> list[float]:
-        scores = list()
+    ) -> ChunkedRepo:
         completion_split = self.splitter(completion_prefix)
 
         # if self.compl_file_trunc_lines < 1: TODO
@@ -45,9 +44,9 @@ class BaseScorer:
         for chunk in chunked_repo:
             if chunk.content_token is None:
                 chunk.content_token = self.splitter(chunk.prompt)
-            scores.append(self.score(completion_split, chunk.content_token))
+            chunk.score = self.score(completion_split, chunk.content_token)
 
-        return scores
+        return chunked_repo
 
     def score_dict(self, query: str, docs: dict[str, str]) -> dict[str, dict]:
         query_split = self.splitter(query)
@@ -59,17 +58,17 @@ class BaseScorer:
 
         return scored_docs
 
-    def __call__(self, query: str, docs: ChunkedRepo | dict) -> list[float] | dict:
+    def __call__(self, query: str, docs: ChunkedRepo | dict) -> ChunkedRepo | dict:
         if isinstance(docs, ChunkedRepo):
-            scored_results = self.score_repo(query, docs)
+            scored_repo = self.score_repo(query, docs)
         elif isinstance(docs, dict):
-            scored_results = self.score_dict(query, docs)
+            scored_repo = self.score_dict(query, docs)
         else:
             raise TypeError(
                 f"Expected 'chunked_repo' to be an instance of ChunkedRepo or dict, got {type(docs).__name__} instead."
             )
 
-        return scored_results
+        return scored_repo
 
 
 class IOUScorer(BaseScorer):
@@ -107,7 +106,7 @@ class BM25Scorer(BaseScorer):
 
         return BM25Okapi(docs_split)
 
-    def __call__(self, query: str, docs: ChunkedRepo | dict) -> list[float]:
+    def __call__(self, query: str, docs: ChunkedRepo | dict) -> ChunkedRepo | dict:
         query_split = self.splitter(query)
         if isinstance(docs, ChunkedRepo):
             # Init BM25
@@ -120,9 +119,11 @@ class BM25Scorer(BaseScorer):
             raise TypeError("Unsupported docs type")
 
         scores = bm25.get_scores(query_split)
-        # TODO change to return scored repo
+        if isinstance(docs, ChunkedRepo):
+            for chunk, score in zip(docs.chunks, scores):
+                chunk.score = score
 
-        return scores.tolist()
+        return docs
 
 
 class EmbedScorer(BaseScorer):

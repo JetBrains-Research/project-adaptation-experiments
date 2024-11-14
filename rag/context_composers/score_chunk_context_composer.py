@@ -56,6 +56,14 @@ class ChunkScoreComposer(BaseContextComposer):
 
         return chunked_repo
 
+    def score_and_select(self, chunked_repo: ChunkedRepo) -> ChunkedRepo:
+        chunked_repo = self.scorer(self.completion_last_chunk.content, chunked_repo)
+        # Chunks ordered from the highest score to the lowest
+        chunked_repo.sort()
+        chunked_repo.top_k(k=self.top_k)
+
+        return chunked_repo
+
 
     def context_composer(
         self,
@@ -96,12 +104,7 @@ class ChunkScoreComposer(BaseContextComposer):
                 # TODO Duplicated operation. Think about refactoring.
                 chunked_repo.deduplicate_chunks()
 
-        chunked_repo = self.scorer(self.completion_last_chunk.content, chunked_repo)
-        # Chunks ordered from the highest score to the lowest
-        chunked_repo.sort()
-        chunked_repo.top_k(k=self.top_k)
-
-        # TODO fix prompt attribute in the Chunk class
+        chunked_repo = self.score_and_select(chunked_repo)
         context = self.merge_chunks(chunked_repo)
 
         return context, cached_repo
