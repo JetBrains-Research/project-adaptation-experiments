@@ -48,26 +48,8 @@ class BaseScorer:
 
         return chunked_repo
 
-    def score_dict(self, query: str, docs: dict[str, str]) -> dict[str, dict]:
-        query_split = self.splitter(query)
-        scored_docs = dict()
-        for doc_name, doc in docs.items():
-            doc_split = self.splitter(doc)
-            score = self.score(query_split, doc_split)
-            scored_docs[doc_name] = {"doc": doc, "score": score}
-
-        return scored_docs
-
-    def __call__(self, query: str, docs: ChunkedRepo | dict) -> ChunkedRepo | dict:
-        if isinstance(docs, ChunkedRepo):
-            scored_repo = self.score_repo(query, docs)
-        elif isinstance(docs, dict):
-            scored_repo = self.score_dict(query, docs)
-        else:
-            raise TypeError(
-                f"Expected 'chunked_repo' to be an instance of ChunkedRepo or dict, got {type(docs).__name__} instead."
-            )
-
+    def __call__(self, query: str, docs: ChunkedRepo) -> ChunkedRepo:
+        scored_repo = self.score_repo(query, docs)
         return scored_repo
 
 
@@ -106,22 +88,16 @@ class BM25Scorer(BaseScorer):
 
         return BM25Okapi(docs_split)
 
-    def __call__(self, query: str, docs: ChunkedRepo | dict) -> ChunkedRepo | dict:
+    def __call__(self, query: str, docs: ChunkedRepo) -> ChunkedRepo:
         query_split = self.splitter(query)
-        if isinstance(docs, ChunkedRepo):
-            # Init BM25
-            if docs.bm25 is None or (not self.do_cache):
-                docs.bm25 = self.get_bm25([chunk.prompt for chunk in docs.chunks])
-            bm25 = docs.bm25
-        elif isinstance(docs, dict):
-            bm25 = self.get_bm25(docs.values())
-        else:
-            raise TypeError("Unsupported docs type")
+        # Init BM25
+        if docs.bm25 is None or (not self.do_cache):
+            docs.bm25 = self.get_bm25([chunk.prompt for chunk in docs.chunks])
+        bm25 = docs.bm25
 
         scores = bm25.get_scores(query_split)
-        if isinstance(docs, ChunkedRepo):
-            for chunk, score in zip(docs.chunks, scores):
-                chunk.score = score
+        for chunk, score in zip(docs.chunks, scores):
+            chunk.score = score
 
         return docs
 
@@ -141,27 +117,20 @@ class EmbedScorer(BaseScorer):
 
         return retriever
 
-    def __call__(self, query: str, docs: ChunkedRepo | dict) -> ChunkedRepo | dict:
-        if isinstance(docs, ChunkedRepo):
-            # Init vector base
-            if docs.dense_retriever is None or (not self.do_cache):
-                docs.dense_retriever = self.get_retriever(
-                    [chunk.prompt for chunk in docs.chunks]
-                )
-            retriever = docs.dense_retriever
-        elif isinstance(docs, dict):
-            retriever = self.get_retriever(list(docs.values()))
-        else:
-            raise TypeError("Unsupported docs type")
+    def __call__(self, query: str, docs: ChunkedRepo) -> ChunkedRepo:
+        # Init vector base
+        if docs.dense_retriever is None or (not self.do_cache):
+            docs.dense_retriever = self.get_retriever(
+                [chunk.prompt for chunk in docs.chunks]
+            )
+        retriever = docs.dense_retriever
         with disable_tqdm():
             scored_chunks = retriever.retrieve(query)
 
         # That's inefficient. Think about moving everything to llama-index API and dataclasses
         scored_chunks_dict = {node.text: node.score for node in scored_chunks}
-        if isinstance(docs, ChunkedRepo):
-            for chunk in docs.chunks:
-                chunk.score = scored_chunks_dict[chunk.prompt]
-        # TODO add support for a dict
+        for chunk in docs.chunks:
+            chunk.score = scored_chunks_dict[chunk.prompt]
 
         return docs
 

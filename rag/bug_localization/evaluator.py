@@ -88,10 +88,8 @@ def run_benchmark(dataset, chunker, scorer, limit=-1, ) -> pd.DataFrame:
         repo = RepoStorage(filename=list(repo_content.keys()), content=list(repo_content.values()))
         repo_chunked = chunker(repo)
         start_time = time.time()
-        scores = scorer(issue_description, repo_chunked)
+        repo_chunked = scorer(issue_description, repo_chunked)
         end_time = time.time()
-        for chunk, score in zip(repo_chunked.chunks, scores):
-            chunk.score = score
         scored_chunked_files = [(chunk.filename, chunk.score) for chunk in repo_chunked.chunks]
         scored_files = aggregate_and_sort_scores(scored_chunked_files, method=chunker.score_agg)
         item_copy = item.copy()
