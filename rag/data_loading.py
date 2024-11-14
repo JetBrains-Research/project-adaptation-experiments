@@ -4,6 +4,8 @@ from typing import Iterator
 import rank_bm25
 from llama_index.core.base.base_retriever import BaseRetriever
 
+COMMENT_SEPS = {"python": "#", "java": "//", "kotlin": "//"}
+LANG_EXT_MAP = {"python": "py", "kotlin": "kt", "java": "java"}
 
 @dataclass
 class FileStorage:
@@ -90,7 +92,16 @@ class Chunk:
 
     @property
     def prompt(self) -> str:
-        return f"# CHUNK {self.filename} SCORE {self.score:.2f}\n{self.content}\n\n"
+        if self.filename.endswith(".kt"):
+            sep = COMMENT_SEPS["kotlin"]
+        elif self.filename.endswith(".java"):
+            sep = COMMENT_SEPS["java"]
+        else:
+            sep = COMMENT_SEPS["python"]
+        if self.score is not None:
+            return f"{sep} CHUNK {self.filename} SCORE {self.score:.2f}\n{self.content}\n\n"
+        else:
+            return f"{sep} CHUNK {self.filename}\n{self.content}\n\n"
 
 
 @dataclass
@@ -146,13 +157,13 @@ class ChunkedRepo:
         for score, chunk in zip(scores, self.chunks):
             chunk.score = score
 
-    def top_k(self, k: int = 10) -> "ChunkedRepo":
-        chunks = self.chunks
-        sorted_chunks = sorted(chunks, key=lambda x: x.score, reverse=True)
+    def sort(self):
+        self.chunks = sorted(self.chunks, key=lambda x: x.score, reverse=True)
+
+    def top_k(self, k: int = 10) -> None:
+        sorted_chunks = sorted(self.chunks, key=lambda x: x.score, reverse=True)
         if k > 0:
-            return ChunkedRepo(chunks=sorted_chunks[:k])
-        else:
-            return ChunkedRepo(chunks=sorted_chunks)
+            self.chunks = sorted_chunks[:k]
 
     def deduplicate_chunks(self):
         seen: set[str] = set()

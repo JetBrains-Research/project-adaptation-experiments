@@ -2,7 +2,7 @@ from kotlineval.data.plcc.base_context_composer import BaseContextComposer
 from omegaconf import DictConfig
 
 from rag.data_loading import (ChunkedRepo, FileStorage, RepoStorage,
-                              map_dp_to_dataclass)
+                              map_dp_to_dataclass, COMMENT_SEPS)
 from rag.rag_engine.chunkers import BaseChunker
 from rag.rag_engine.scorers import BaseScorer
 
@@ -36,19 +36,16 @@ class ChunkScoreComposer(BaseContextComposer):
         self.chunk_completion_file = config_rag.chunk_completion_file
         if self.chunk_completion_file:
             self.completion_last_chunk_size = config_rag.completion_last_chunk_size
-        self.counter = 0
+        self.comment_sep = COMMENT_SEPS[language]
 
     @staticmethod
-    def merge_chunks(chunked_repo: ChunkedRepo) -> str:
+    def merge_chunks(chunked_repo_ordered: ChunkedRepo) -> str:
         # Chunks come ordered from the highest score to the lowest
-        context_lines = []
-        for i, chunk in enumerate(chunked_repo):
-            chunk_content = (
-                f"\nCHUNK #{i+1} from file: {chunk.filename}\n\n" + chunk.content
-            )
-            context_lines.append(chunk_content)
+        context_chunks = []
+        for i, chunk in enumerate(chunked_repo_ordered):
+            context_chunks.append(chunk.prompt)
         # Reversing the order, so the most relevant chunks would be close to completion file.
-        return "\n".join(context_lines[::-1])
+        return "\n".join(context_chunks[::-1])
 
     def _get_chunks(self, repo_snapshot: RepoStorage) -> ChunkedRepo:
         # filter repo
@@ -59,14 +56,6 @@ class ChunkScoreComposer(BaseContextComposer):
 
         return chunked_repo
 
-    def _score_chunks(
-        self, completion_prefix: str, chunked_repo: ChunkedRepo
-    ) -> ChunkedRepo:
-        scores = self.scorer(completion_prefix, chunked_repo)
-        chunked_repo.set_scores(scores)
-        chunked_repo = chunked_repo.top_k(self.top_k)
-
-        return chunked_repo
 
     def context_composer(
         self,
@@ -106,10 +95,14 @@ class ChunkScoreComposer(BaseContextComposer):
                 chunked_repo.append(chunked_completion)
                 # TODO Duplicated operation. Think about refactoring.
                 chunked_repo.deduplicate_chunks()
-        scored_chunked_repo = self._score_chunks(
-            self.completion_last_chunk.content, chunked_repo
-        )
-        context = self.merge_chunks(scored_chunked_repo)
+
+        chunked_repo = self.scorer(self.completion_last_chunk.content, chunked_repo)
+        # Chunks ordered from the highest score to the lowest
+        chunked_repo.sort()
+        chunked_repo.top_k(k=self.top_k)
+
+        # TODO fix prompt attribute in the Chunk class
+        context = self.merge_chunks(chunked_repo)
 
         return context, cached_repo
 
@@ -117,10 +110,9 @@ class ChunkScoreComposer(BaseContextComposer):
         self, datapoint: dict, line_index: int, cached_repo: dict | None = None
     ) -> tuple[dict[str, str], dict | None]:
         context, cached_repo = self.context_composer(datapoint, line_index, cached_repo)
-        self.counter += 1
         completion_item = self.completion_composer(datapoint, line_index)
         completion_context = (
-            self.completion_last_chunk.filename
+            self.comment_sep + " " + self.completion_last_chunk.filename
             + "\n\n"
             + self.completion_last_chunk.content.strip()
             + "\n"

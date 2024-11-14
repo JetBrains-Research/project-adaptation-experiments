@@ -44,7 +44,7 @@ class BaseScorer:
 
         for chunk in chunked_repo:
             if chunk.content_token is None:
-                chunk.content_token = self.splitter(chunk.content)
+                chunk.content_token = self.splitter(chunk.prompt)
             scores.append(self.score(completion_split, chunk.content_token))
 
         return scores
@@ -91,6 +91,8 @@ class IOUScorer(BaseScorer):
 
         return iou
 
+    # TODO change to return scored repo
+
 
 class BM25Scorer(BaseScorer):
     def __init__(self, splitter: BaseSplitter, do_cache=True, **kwargs):
@@ -110,7 +112,7 @@ class BM25Scorer(BaseScorer):
         if isinstance(docs, ChunkedRepo):
             # Init BM25
             if docs.bm25 is None or (not self.do_cache):
-                docs.bm25 = self.get_bm25([chunk.content for chunk in docs.chunks])
+                docs.bm25 = self.get_bm25([chunk.prompt for chunk in docs.chunks])
             bm25 = docs.bm25
         elif isinstance(docs, dict):
             bm25 = self.get_bm25(docs.values())
@@ -118,6 +120,7 @@ class BM25Scorer(BaseScorer):
             raise TypeError("Unsupported docs type")
 
         scores = bm25.get_scores(query_split)
+        # TODO change to return scored repo
 
         return scores.tolist()
 
@@ -137,23 +140,29 @@ class EmbedScorer(BaseScorer):
 
         return retriever
 
-    def __call__(self, query: str, docs: ChunkedRepo | dict) -> list[float]:
+    def __call__(self, query: str, docs: ChunkedRepo | dict) -> ChunkedRepo | dict:
         if isinstance(docs, ChunkedRepo):
             # Init vector base
             if docs.dense_retriever is None or (not self.do_cache):
                 docs.dense_retriever = self.get_retriever(
-                    [chunk.content for chunk in docs.chunks]
+                    [chunk.prompt for chunk in docs.chunks]
                 )
             retriever = docs.dense_retriever
         elif isinstance(docs, dict):
             retriever = self.get_retriever(list(docs.values()))
         else:
             raise TypeError("Unsupported docs type")
-
         with disable_tqdm():
             scored_chunks = retriever.retrieve(query)
-        scores = [chunk.score for chunk in scored_chunks]
-        return scores
+
+        # That's inefficient. Think about moving everything to llama-index API and dataclasses
+        scored_chunks_dict = {node.text: node.score for node in scored_chunks}
+        if isinstance(docs, ChunkedRepo):
+            for chunk in docs.chunks:
+                chunk.score = scored_chunks_dict[chunk.prompt]
+        # TODO add support for a dict
+
+        return docs
 
 
 def get_scorer(name: str, **kwargs) -> BaseScorer:
