@@ -87,6 +87,12 @@ def get_composer(composer_name: str, config) -> BaseContextComposer | None:
         )
         print("Init DracoComposer")
     elif composer_name == "multi_score":
+        if "multi_score" in config.data.composers_list:
+            raise RuntimeError(f"Can't call multi_score recursively")
+        
+        if len(config.data.composers_list) == 0:
+            raise RuntimeError(f"composers_list is empty")
+
         composers = []
         for composer_name_from_list in config.data.composers_list:
             composer = get_composer(composer_name_from_list, config)
