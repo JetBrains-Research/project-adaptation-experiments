@@ -21,7 +21,6 @@ class DracoComposer(BaseContextComposer):
     def __init__(
         self,
         language: str,
-        model_name: str,
         filter_extensions: bool = True,
         allowed_extensions: list[str] = [],
         completion_categories: list[str] = ["infile", "inproject"],
@@ -35,7 +34,7 @@ class DracoComposer(BaseContextComposer):
         )
 
         # TODO fix hardcoded paths
-        self.generator = promptGenerator(DS_REPO_DIR, DS_GRAPH_DIR, model_name)
+        self.generator = promptGenerator(DS_REPO_DIR, DS_GRAPH_DIR, "")
 
     @staticmethod
     def merge_chunks(chunked_repo: ChunkedRepo, reverse=True) -> str:
@@ -84,10 +83,10 @@ class DracoComposer(BaseContextComposer):
             + "\n"
         )
         full_context = context + "\n\n" + completion_context
+        completion_item["context"] = context
         completion_item["full_context"] = full_context
 
         return completion_item, cached_repo
-
 
 if __name__ == "__main__":
     # from iou_chunk_scorer import IOUChunkScorer

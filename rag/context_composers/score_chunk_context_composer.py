@@ -121,6 +121,7 @@ class ChunkScoreComposer(BaseContextComposer):
             + "\n"
         )
         full_context = context + "\n\n" + completion_context
+        completion_item["context"] = context
         completion_item["full_context"] = full_context
 
         return completion_item, cached_repo

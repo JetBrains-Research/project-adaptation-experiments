@@ -2,7 +2,7 @@ rag:
   model: "deepseek-ai/deepseek-coder-1.3b-base"
   top_k: -1
   splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
-  scorer: "dense" # ["bm25", "iou", "dense"]
+  scorer: "bm25" # ["bm25", "iou", "dense"]
   chunker: "fixed_line" #["full_file", "fixed_line", "langchain"]
   embed_model: "intfloat/multilingual-e5-small"
   use_n_grams: true
@@ -13,4 +13,4 @@ rag:
   stride: null # -> stride size
   set_stride: False
   completion_last_chunk_size: 32
-  chunk_completion_file: True
+  chunk_completion_file: False
