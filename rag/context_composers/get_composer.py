@@ -9,13 +9,13 @@ from rag.context_composers.draco_context_composer import \
 from rag.context_composers.multi_composer import \
     MultiComposer
 
-from configs.exclusion import exclusion
-from rag_engine.chunkers import get_chunker
-from rag_engine.scorers import get_scorer
-from rag_engine.splitters import get_splitter
+from rag.configs.exclusion import exclusion
+from rag.rag_engine.chunkers import get_chunker
+from rag.rag_engine.scorers import get_scorer
+from rag.rag_engine.splitters import get_splitter
 
 import os
-from draco.preprocess import generate_draco_graph
+from rag.draco.preprocess import generate_draco_graph
 
 
 def get_composer(composer_name: str, config) -> BaseContextComposer | None:
@@ -99,6 +99,6 @@ def get_composer(composer_name: str, config) -> BaseContextComposer | None:
         )
         print("Init MultiComposer")
     else:
-        raise ValueError(f"There is no {config.data.composer_name} composer")
+        raise ValueError(f"There is no {composer_name} composer")
 
     return context_composer

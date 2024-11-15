@@ -5,9 +5,9 @@ import json
 from tqdm.auto import tqdm
 from datasets import Dataset, load_dataset
 
-from draco.pyfile_parse import PythonParser
-from draco.node_prompt import projectSearcher
-from draco.utils import DS_GRAPH_DIR
+from rag.draco.pyfile_parse import PythonParser
+from rag.draco.node_prompt import projectSearcher
+from rag.draco.utils import DS_GRAPH_DIR
 
 
 class projectParser(object):
