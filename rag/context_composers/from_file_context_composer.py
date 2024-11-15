@@ -2,7 +2,7 @@ import hashlib
 from pathlib import Path
 
 import pandas as pd
-from kotlineval.data.plcc.context_composer import PathDistanceComposer
+from kotlineval.data.plcc.context_composer_path_distance import PathDistanceComposer
 from omegaconf import OmegaConf
 
 

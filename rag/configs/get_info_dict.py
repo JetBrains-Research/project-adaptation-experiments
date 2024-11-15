@@ -2,18 +2,14 @@ from omegaconf import DictConfig
 
 
 def get_info_dict(config: DictConfig) -> dict:
-    if config.data.composer_name == "chunk_score":
+    composer_name = config.data.__composer_name
+    if config.data.__composer_name == "multi_score":
+        composer_name = f"{"multi_score"}: {config.data.composers_list}"
+    if composer_name == "path_distance":
         run_info = {
-            "language": config.data.language,
-            "model": config.model.model_name_or_path,
-            "composer": config.data.composer_name,
-        }
-        run_info.update(config.rag)
-    elif config.data.composer_name == "path_distance":
-        run_info = {
-            "language": config.data.language,
-            "model": config.model.model_name_or_path,
-            "composer": config.data.composer_name,
+            "language": config.basics.language,
+            "model": config.basics.model_name_or_path,
+            "composer": composer_name,
             "scorer": None,
             "splitter": None,
             "chunker": None,
@@ -22,6 +18,10 @@ def get_info_dict(config: DictConfig) -> dict:
             "n_grams_min": None,
         }
     else:
-        run_info = {}
-
+        run_info = {
+            "language": config.basics.language,
+            "model": config.basics.model_name_or_path,
+            "composer": composer_name,
+        }
+        run_info.update(config.rag)
     return run_info

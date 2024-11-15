@@ -12,18 +12,14 @@ import hydra
 from kotlineval.data.plcc.data_loader import get_dataloader
 from kotlineval.eval.plcc.evaluator import Evaluator
 from kotlineval.eval.vllm_engine import VllmEngine
+from kotlineval.configs.read_config import read_config
 from omegaconf import DictConfig
 from hydra.core.hydra_config import HydraConfig
 
 from configs.exclusion import exclusion
 from configs.get_info_dict import get_info_dict
 from context_composers.get_composer import get_composer
-from rag_engine.chunkers import get_chunker
-from rag_engine.scorers import get_scorer
-from rag_engine.splitters import get_splitter
-from gpu_distributor import set_gpu
 
-from draco.preprocess import generate_draco_graph
 
 """
 CUDA_VISIBLE_DEVICES=1 python3 eval_plcc.py
@@ -38,7 +34,7 @@ def run_eval_plcc(config: DictConfig):
     # ! Uncomment this if you want to use multitask on multi-GPU
     # job_id = HydraConfig.get().job.num
     # set_gpu(job_id)
-
+    config = read_config(config=config)
     results_filename = Path(config.output.results_filename)
     config.output.results_filename = results_filename
     config_rag = config.rag
@@ -51,10 +47,10 @@ def run_eval_plcc(config: DictConfig):
         return None
 
     print(40 * "-")
-    print(f"Composer - {config.data.composer_name}")
-    print(f"Model - {config.model.model_name_or_path}")
+    print(f"Composer - {config.data.__composer_name}")
+    print(f"Model - {config.basics.model_name_or_path}")
 
-    context_composer = get_composer(config.data.composer_name, config)
+    context_composer = get_composer(config.data.__composer_name, config)
     if context_composer is None:
         print("Skipping this configuration")
         return None
@@ -67,20 +63,19 @@ def run_eval_plcc(config: DictConfig):
     # return None
 
     run_info = get_info_dict(config)
-    vllm_args = dict(config.vllm.vllm_args) if config.vllm.vllm_args is not None else {}
+    vllm_args = dict(config._vllm._vllm_args) if config._vllm._vllm_args is not None else {}
     generation_engine = VllmEngine(
-        hf_model_path=config.model.model_name_or_path,
-        model_name=config.model.get("model_name"),
-        context_size=max(config.eval.context_size_list),
+        hf_model_path=config.basics.model_name_or_path,
+        model_name=config.model.get("_model_name"),
+        context_size=max(config.eval._context_size_list),
         vllm_args=vllm_args,
-        generation_args=dict(config.vllm.generation_args),
+        generation_args=dict(config._vllm.__generation_args),
     )
     evaluator = Evaluator(
         engine=generation_engine,
-        result_folder=config.output.result_folder,
-        result_filename=config.output.results_filename,
-        log_model_inputs=config.eval.log_model_inputs,
-        config=config,
+        results_file=config.output.results_file,
+        context_lengths=config.eval._context_size_list,
+        log_model_inputs=config.basics.log_model_inputs,
         run_info=run_info,
     )
 
