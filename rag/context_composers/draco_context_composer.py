@@ -22,6 +22,7 @@ class DracoComposer(BaseContextComposer):
         self,
         language: str,
         filter_extensions: bool = True,
+        use_full_file: bool = False,
         allowed_extensions: list[str] = [],
         completion_categories: list[str] = ["infile", "inproject"],
         **kwargs,
@@ -35,21 +36,31 @@ class DracoComposer(BaseContextComposer):
 
         # TODO fix hardcoded paths
         self.generator = promptGenerator(DS_REPO_DIR, DS_GRAPH_DIR, "")
+        self.use_full_file = use_full_file
+
+    # @staticmethod
+    # def merge_chunks(chunked_repo: ChunkedRepo, reverse=True) -> str:
+    #     # Chunks come ordered from the highest score to the lowest
+    #     context_lines = []
+    #     for i, chunk in enumerate(chunked_repo):
+    #         chunk_content = (
+    #             f"\nCHUNK #{i+1} from file: {chunk.filename}\n\n" + chunk.content
+    #         )
+    #         context_lines.append(chunk_content)
+    #     # Reversing the order, so the most relevant chunks would be close to completion file.
+    #     if reverse:
+    #         return "\n".join(context_lines[::-1])
+    #     else:
+    #         return "\n".join(context_lines)
 
     @staticmethod
-    def merge_chunks(chunked_repo: ChunkedRepo, reverse=True) -> str:
+    def merge_chunks(chunked_repo_ordered: ChunkedRepo) -> str:
         # Chunks come ordered from the highest score to the lowest
-        context_lines = []
-        for i, chunk in enumerate(chunked_repo):
-            chunk_content = (
-                f"\nCHUNK #{i+1} from file: {chunk.filename}\n\n" + chunk.content
-            )
-            context_lines.append(chunk_content)
+        context_chunks = []
+        for i, chunk in enumerate(chunked_repo_ordered):
+            context_chunks.append(chunk.prompt)
         # Reversing the order, so the most relevant chunks would be close to completion file.
-        if reverse:
-            return "\n".join(context_lines[::-1])
-        else:
-            return "\n".join(context_lines)
+        return "\n".join(context_chunks[::-1])
 
     def context_composer(
         self,
@@ -57,16 +68,25 @@ class DracoComposer(BaseContextComposer):
         line_index: int,
         cached_repo: dict[str, ChunkedRepo] | None = None,
     ) -> tuple[str, dict | None]:
+
+        repo_snapshot: dict[str, str] = {filename: content \
+                         for (filename, content) in zip(datapoint['repo_snapshot']['filename'], datapoint['repo_snapshot']['content']) \
+                         if filename.endswith('.py')}
        
         completion_item = self.completion_composer(datapoint, line_index)
         context_files = self.generator.retrieve_prompt(datapoint, completion_item['prefix'])
         
         chunked_repo = ChunkedRepo()
         for filename, contents in context_files.items():
-            chunked_file = ChunkedFile(filename, contents)
+            if len(contents) == 0 or filename not in repo_snapshot:
+                continue
+            if self.use_full_file:
+                chunked_file = ChunkedFile(filename, [repo_snapshot[filename]])
+            else:
+                chunked_file = ChunkedFile(filename, contents)
             chunked_repo.append(chunked_file)
 
-        context = self.merge_chunks(chunked_repo, reverse=False)
+        context = self.merge_chunks(chunked_repo)
 
         return context, cached_repo
 

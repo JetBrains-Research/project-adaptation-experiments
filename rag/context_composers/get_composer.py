@@ -83,7 +83,8 @@ def get_composer(composer_name: str, config) -> BaseContextComposer | None:
 
         context_composer = DracoComposer(
             language=config.basics.language,
-            completion_categories=config.eval._completion_categories
+            completion_categories=config.eval._completion_categories,
+            use_full_file=config.draco.use_full_file,
         )
         print("Init DracoComposer")
     elif composer_name == "multi_score":

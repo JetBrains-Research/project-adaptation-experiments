@@ -18,8 +18,17 @@ class MultiComposer(BaseContextComposer):
     def context_and_completion_composer(
         self, datapoint: dict, line_index: int, cached_repo: dict | None = None
     ) -> tuple[dict[str, str], dict | None]:
+        contexts = []
         for composer in self.composers:
             completion_item, cached_repo = composer.context_and_completion_composer(datapoint, line_index, cached_repo)
-            if completion_item["context"].strip():
-                return completion_item, cached_repo
-        return {"full_context": ""}, cached_repo
+            contexts.append(completion_item["context"])
+            
+        completion_context = (
+            completion_item["filename"]
+            + "\n\n"
+            + completion_item["prefix"].strip()
+            + "\n"
+        )
+        full_context = "\n".join(contexts) + "\n\n" + completion_context
+        completion_item["full_context"] = full_context
+        return completion_item, cached_repo

@@ -13,4 +13,4 @@ rag:
   stride: null # -> stride size
   set_stride: False
   completion_last_chunk_size: 32
-  chunk_completion_file: False
+  chunk_completion_file: True

@@ -4,7 +4,7 @@ from omegaconf import DictConfig
 def get_info_dict(config: DictConfig) -> dict:
     composer_name = config.data.__composer_name
     if config.data.__composer_name == "multi_score":
-        composer_name = f"{"multi_score"}: {config.data.composers_list}"
+        composer_name = f"{'multi_score'}: {config.data.composers_list}"
     if composer_name == "path_distance":
         run_info = {
             "language": config.basics.language,
