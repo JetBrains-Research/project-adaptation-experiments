@@ -4,7 +4,7 @@ rag:
   splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
   scorer: "bm25" # ["bm25", "iou", "dense"]
   chunker: "fixed_line" #["full_file", "fixed_line", "langchain"]
-  embed_model: "intfloat/multilingual-e5-small"
+  embed_model: "intfloat/multilingual-e5-large-instruct"
   use_n_grams: true
   n_grams_min: 1
   n_grams_max: 1
