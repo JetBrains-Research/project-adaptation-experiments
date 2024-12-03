@@ -7,8 +7,8 @@ output:
   results_filename: "results_py.jsonl"
 data:
   # __composer_name ["path_distance", "chunk_score", "draco", "multi_score" "from_file", "no_context", "kl_chunk_score"]
-  __composer_name: "draco"
-  composers_list: ["draco", "chunk_score"]
+  __composer_name: "chunk_score"
+  # composers_list: ["draco", "chunk_score"]
 draco:
   use_full_file: true
 eval:
