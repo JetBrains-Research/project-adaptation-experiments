@@ -16,7 +16,7 @@ from rag.rag_engine.splitters import BaseSplitter
 
 @contextlib.contextmanager
 def disable_tqdm():
-    with open(os.devnull, 'w') as devnull:
+    with open(os.devnull, "w") as devnull:
         old_stdout = sys.stdout
         old_stderr = sys.stderr
         sys.stdout = devnull
@@ -26,6 +26,7 @@ def disable_tqdm():
         finally:
             sys.stdout = old_stdout
             sys.stderr = old_stderr
+
 
 class BaseScorer:
     def __init__(self, splitter: BaseSplitter = None):
@@ -103,17 +104,56 @@ class BM25Scorer(BaseScorer):
 
 
 class EmbedScorer(BaseScorer):
-    def __init__(self, embed_model_name, do_cache=True, **kwargs):
+    def __init__(
+        self, embed_model_name, do_cache=True, task: str = "completion", **kwargs
+    ):
         self.do_cache = do_cache
         # TODO check that the model max_length is larger than chunk length
-        self.embed_model = HuggingFaceEmbedding(embed_model_name, embed_batch_size=100)
-        # model_name="intfloat/multilingual-e5-small"
+
+        self.base_models = [
+            "intfloat/multilingual-e5-small",
+            "intfloat/multilingual-e5-base",
+        ]
+        self.instruct_models = ["intfloat/multilingual-e5-large-instruct"]
+
+        # Instructions for bug localization
+        instruction = "Given a question, retrieve code passages relevant to the query."
+        if embed_model_name in self.base_models:
+            # https://huggingface.co/intfloat/multilingual-e5-base
+            query_prefix = "query: "
+            text_prefix = "passage: "
+        elif embed_model_name == "GritLM/GritLM-7B":
+            # https://github.com/ContextualAI/gritlm?tab=readme-ov-file#inference
+            query_prefix = f"<|user|>\n{instruction}\n<|embed|>\n"
+            text_prefix = "<|embed|>\n"
+        # if embed_model_name == "intfloat/multilingual-e5-large-instruct" or embed_model_name.endswith("instruct"):
+        else:
+            # https://huggingface.co/intfloat/multilingual-e5-large-instruct
+            query_prefix = f"Instruct: {instruction}\nQuery: "
+            text_prefix = ""
+
+        if task == "completion":
+            if embed_model_name in self.base_models:
+                # https://huggingface.co/intfloat/multilingual-e5-base
+                text_prefix = "query: "
+            query_prefix = text_prefix
+
+        self.embed_model = HuggingFaceEmbedding(
+            embed_model_name,
+            embed_batch_size=100,
+            query_instruction=query_prefix,
+            text_instruction=text_prefix,
+        )
 
     def get_retriever(self, docs: list[str]) -> BaseRetriever:
         nodes = [TextNode(text=chunk) for chunk in docs]
         with disable_tqdm():
-            index = VectorStoreIndex(nodes, embed_model=self.embed_model, show_progress=False)
-            retriever = index.as_retriever(similarity_top_k=len(docs), verbose=False, show_progress=False)
+            index = VectorStoreIndex(
+                nodes, embed_model=self.embed_model, show_progress=False
+            )
+            retriever = index.as_retriever(
+                similarity_top_k=len(docs), verbose=False, show_progress=False
+            )
 
         return retriever
 
@@ -143,6 +183,8 @@ def get_scorer(name: str, **kwargs) -> BaseScorer:
     elif name == "dense":
         scorer = EmbedScorer(**kwargs)
     else:
-        raise ValueError(f"There is no {name} scorer. Only [iou] are available")
+        raise ValueError(
+            f"There is no {name} scorer. Only [iou, bm25, dense] are available"
+        )
 
     return scorer
