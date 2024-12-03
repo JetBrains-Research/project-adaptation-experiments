@@ -19,6 +19,7 @@ from hydra.core.hydra_config import HydraConfig
 from configs.exclusion import exclusion
 from configs.get_info_dict import get_info_dict
 from context_composers.get_composer import get_composer
+from gpu_distributor import set_gpu
 
 
 """

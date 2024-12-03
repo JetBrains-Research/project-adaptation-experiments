@@ -105,7 +105,11 @@ class BM25Scorer(BaseScorer):
 
 class EmbedScorer(BaseScorer):
     def __init__(
-        self, embed_model_name, do_cache=True, task: str = "completion", **kwargs
+        self,
+        embed_model_name,
+        do_cache: bool = True,
+        task: str = "completion",
+        **kwargs,
     ):
         self.do_cache = do_cache
         # TODO check that the model max_length is larger than chunk length

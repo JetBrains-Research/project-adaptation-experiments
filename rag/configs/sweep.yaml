@@ -2,3 +2,7 @@ hydra:
     mode: MULTIRUN
     sweeper:
         params:
+            # ++use_full_file: [True, False]
+            ++basics.language: python, kotlin
+            ++rag.splitter: word_splitter, model_tokenizer, line_splitter
+            ++rag.scorer: bm25, iou

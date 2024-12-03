@@ -25,12 +25,17 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
     del run_info["language"]
 
     splitter = get_splitter(config_rag.splitter, model_name=config_rag.model)
-    scorer = get_scorer(config_rag.scorer, splitter=splitter)
+    scorer = get_scorer(
+        config_rag.scorer,
+        splitter=splitter,
+        embed_model_name=config_rag.embed_model,
+        task="bug_localization",
+    )
     chunk_kwargs = {
         "chunk_lines_size": config_rag.chunk_lines_size,
         # "stride": config_rag.stride,
-        "language": config.data.language,
-        "score_agg": config_rag.chunk_score_agg
+        "language": config.basics.language,
+        "score_agg": config_rag.chunk_score_agg,
     }
     chunker = get_chunker(config_rag.chunker, **chunk_kwargs)
 
@@ -42,7 +47,9 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
         print("Skipping this configuration")
         return None
 
-    results, summary = evaluate_scorer(dataset, chunker, scorer, run_info, limit=config.limit)
+    results, summary = evaluate_scorer(
+        dataset, chunker, scorer, run_info, limit=config.limit
+    )
     save_results(
         results,
         summary,
