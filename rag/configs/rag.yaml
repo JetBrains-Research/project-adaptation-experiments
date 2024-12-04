@@ -4,11 +4,13 @@ rag:
   splitter: "word_splitter" #["word_splitter", "model_tokenizer", "line_splitter"]
   scorer: "dense" # ["bm25", "iou", "dense"]
   chunker: "full_file" #["full_file", "fixed_line", "langchain"]
-  embed_model: "GritLM/GritLM-7B"
+  embed_model: "intfloat/multilingual-e5-small"
   # "intfloat/multilingual-e5-large-instruct"
   # intfloat/multilingual-e5-small
   # intfloat/multilingual-e5-base
   # GritLM/GritLM-7B
+  # "voyage-3"
+  # "voyage-3-lite"
   use_n_grams: true
   n_grams_min: 1
   n_grams_max: 1
