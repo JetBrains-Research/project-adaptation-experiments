@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import hydra
 import pandas as pd
 from omegaconf import DictConfig
+from hydra.core.hydra_config import HydraConfig
 
 from configs.exclusion import exclusion
 from configs.get_info_dict import get_info_dict
@@ -14,12 +15,20 @@ from rag.bug_localization.load_data import load_data
 from rag.rag_engine.scorers import get_scorer
 from rag.rag_engine.splitters import get_splitter
 from rag.rag_engine.chunkers import get_chunker
+from gpu_distributor import set_gpu
 
 # TODO refactor
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
+
+    try:
+        job_id = HydraConfig.get().job.num
+        set_gpu(job_id)
+    except:
+        pass
+
     config_rag = config.rag
     run_info = get_info_dict(config)
     del run_info["language"]
