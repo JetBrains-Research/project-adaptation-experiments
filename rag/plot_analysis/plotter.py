@@ -5,6 +5,18 @@ from ipywidgets import interact, widgets
 from sympy import plot
 from xlwings.utils import chunk
 import numpy as np
+from pathlib import Path
+
+def merge_df(base_path, paths_list: list[str]):
+    dataframes = []
+    for path in paths_list:
+        full_path = base_path / path
+        if not Path(full_path).exists():
+            raise FileNotFoundError(f"Path {full_path} does not exist")
+        df = pd.read_json(full_path, orient="records", lines=True)
+        dataframes.append(df)
+    final_dataframe = pd.concat(dataframes, ignore_index=True)
+    return final_dataframe
 
 def read_results(df, group_columns):
 
@@ -32,9 +44,11 @@ def read_results(df, group_columns):
 def get_group_columns(df):
     # df = pd.read_json(path, orient="records", lines=True)
 
-    drop_columns = ['context_len_config', 'count', 'context_len_mean', 'time_gen_per_item', 'scores', 'time_data_load_per_item']
-    if 'stride' in df.columns:
-        drop_columns.append('stride')
+    template_drop_columns = ['context_len_config', 'count', 'context_len_mean', 'time_gen_per_item', 'scores', 'time_data_load_per_item', 'stride']
+    drop_columns = []
+    for col in template_drop_columns:
+        if col in df.columns:
+            drop_columns.append(col)
 
     # Drop all columns for which we don't want aggregation
     group_columns = df.columns.drop(drop_columns).tolist()
@@ -89,7 +103,7 @@ def filter_target_columns(results, group_columns, delete_columns=[]):
             del target_columns[del_col]
     return target_columns
 
-def plot_dropdown(results: pd.DataFrame, plot_by, metric, fontsize=11, **kwargs):
+def plot_dropdown(results: pd.DataFrame, plot_by, name_by, metric, title='', fontsize=11, **kwargs):
     filter_cond = ' & '.join(
         [f'{key}==@params["{key}"]' if isinstance(value, (int, float)) 
          else f'{key}=="{value}"' for key, value in kwargs.items()]
@@ -100,9 +114,9 @@ def plot_dropdown(results: pd.DataFrame, plot_by, metric, fontsize=11, **kwargs)
     filtered_df = results.query(filter_cond, local_dict={'params': params})
 
     fig, ax = plt.subplots(figsize=(6, 4))
-    filtered_df = filtered_df.sort_values(by=plot_by)
+    filtered_df = filtered_df.sort_values(by=name_by)
     for idx, row in filtered_df.iterrows():
-        name = f"{row['chunker']}_{row[plot_by]}"
+        name = "_".join([str(row[col]) for col in name_by])
         ax.plot(row['context_len_config'], row[metric], label=name)
     ax.legend(loc='lower right')
     
@@ -112,12 +126,15 @@ def plot_dropdown(results: pd.DataFrame, plot_by, metric, fontsize=11, **kwargs)
     plt.yticks(fontsize=fontsize)
     plt.grid(True)
     plt.ylim(0.1, 0.63)
-    
-    title = ', '.join([f'{key} = {value}' for key, value in kwargs.items()])
-    plt.title(f"{metric} for {title}", fontsize=fontsize)
+
+    # Add overall title if provided
+    if len(title) != 0:
+        fig.suptitle(f"{metric} {title}", fontsize=fontsize + 7)
+
+    plt.tight_layout()
     plt.show()
 
-def plot_dropdown_with_group_by(results: pd.DataFrame, plot_by, group_by, metric, fontsize=11, **kwargs):
+def plot_dropdown_with_group_by(results: pd.DataFrame, plot_by, group_by, name_by, metric, title='', fontsize=11, **kwargs):
     params = {key: value for key, value in kwargs.items()}
     unique_groups = results[group_by].unique()
 
@@ -136,10 +153,10 @@ def plot_dropdown_with_group_by(results: pd.DataFrame, plot_by, group_by, metric
              else f'{key}=="{val}"' for key, val in params.items()]
         )
         filtered_df = results.query(filter_cond, local_dict={'params': params})
-        filtered_df = filtered_df.sort_values(by=[plot_by, "chunker"])
+        filtered_df = filtered_df.sort_values(by=name_by)
 
         for idx, row in filtered_df.iterrows():
-            name = f"{row['chunker']}_{row[plot_by]}"
+            name = "_".join([str(row[col]) for col in name_by])
             ax.plot(row['context_len_config'], row[metric], label=name)
         ax.legend(loc='lower right')
         
@@ -148,21 +165,46 @@ def plot_dropdown_with_group_by(results: pd.DataFrame, plot_by, group_by, metric
         ax.tick_params(axis='both', which='major', labelsize=fontsize)
         ax.grid(True)
         ax.set_ylim(0.1, 0.63)
-        ax.set_title(f"{metric} {group_by} = {group_value}", fontsize=fontsize)
+        ax.set_title(f"{group_by} = {group_value}", fontsize=fontsize)
+
+    # Add overall title if provided
+    if len(title) != 0:
+        fig.suptitle(f"{metric} {title}", fontsize=fontsize + 7)
 
     plt.tight_layout()
     plt.show()
 
-def make_interaction(results, group_columns, dropdown, plot_params, metrics, delete_columns=[]):
+def make_interaction(results, group_columns, dropdown, dropdown_params, plot_params, delete_columns=[]):
     delete_columns = delete_columns.copy()
-    delete_columns.extend(plot_params.values())
+    delete_columns.extend([v for v in dropdown_params.values() if isinstance(v, str)])
     target_columns = filter_target_columns(results, group_columns, delete_columns)
 
-    plot_params = plot_params.copy()
-    plot_params['results'] = widgets.fixed(results)
-    plot_params['metric'] = metrics
+    dropdown_params = dropdown_params.copy()
+    dropdown_params['results'] = widgets.fixed(results)
+
+    if 'name_by' not in plot_params:
+        plot_params['name_by'] = [dropdown_params['plot_by']]
 
     # Merge additional_params with target_columns
-    all_params = {**target_columns, **plot_params}
+    all_params = {**target_columns, **dropdown_params}
 
-    interact(dropdown, **all_params)
+    # Wrap dropdown to include additional params
+    def wrapped_dropdown(**kwargs):
+        dropdown(**kwargs, **plot_params)
+
+    interact(wrapped_dropdown, **all_params)
+
+
+# def make_interaction(results, group_columns, dropdown, plot_params, metrics, delete_columns=[]):
+#     delete_columns = delete_columns.copy()
+#     delete_columns.extend(plot_params.values())
+#     target_columns = filter_target_columns(results, group_columns, delete_columns)
+
+#     plot_params = plot_params.copy()
+#     plot_params['results'] = widgets.fixed(results)
+#     plot_params['metric'] = metrics
+
+#     # Merge additional_params with target_columns
+#     all_params = {**target_columns, **plot_params}
+
+#     interact(dropdown, **all_params)
