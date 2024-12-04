@@ -2,9 +2,11 @@ from typing import Iterable
 
 from rank_bm25 import BM25Okapi
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.voyageai import VoyageEmbedding
 from llama_index.core.schema import TextNode
 from llama_index.core import VectorStoreIndex
 from llama_index.core.base.base_retriever import BaseRetriever
+from dotenv import load_dotenv
 
 import contextlib
 import sys
@@ -13,6 +15,7 @@ import os
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
 
+load_dotenv()
 
 @contextlib.contextmanager
 def disable_tqdm():
@@ -142,12 +145,18 @@ class EmbedScorer(BaseScorer):
                 text_prefix = "query: "
             query_prefix = text_prefix
 
-        self.embed_model = HuggingFaceEmbedding(
-            embed_model_name,
-            embed_batch_size=100,
-            query_instruction=query_prefix,
-            text_instruction=text_prefix,
-        )
+        if embed_model_name.startswith("voyage-"):
+            voyage_api_key = os.environ.get("VOYAGE_API_KEY")
+            self.embed_model = VoyageEmbedding(
+                model_name=embed_model_name, voyage_api_key=voyage_api_key
+            )
+        else:
+            self.embed_model = HuggingFaceEmbedding(
+                embed_model_name,
+                embed_batch_size=100,
+                query_instruction=query_prefix,
+                text_instruction=text_prefix,
+            )
 
     def get_retriever(self, docs: list[str]) -> BaseRetriever:
         nodes = [TextNode(text=chunk) for chunk in docs]
