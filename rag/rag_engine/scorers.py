@@ -1,3 +1,4 @@
+import time
 from typing import Iterable
 
 from rank_bm25 import BM25Okapi
@@ -146,9 +147,17 @@ class EmbedScorer(BaseScorer):
             query_prefix = text_prefix
 
         if embed_model_name.startswith("voyage-"):
+            batch_size = None
+            if embed_model_name == "voyage-code-3":
+                # For this model the max allowed tokens per submitted batch is 120_000
+                # The max context size 30_000, just in case I've made a butch 2 times small, than it needs to be.
+                batch_size = 2
             voyage_api_key = os.environ.get("VOYAGE_API_KEY")
             self.embed_model = VoyageEmbedding(
-                model_name=embed_model_name, voyage_api_key=voyage_api_key
+                model_name=embed_model_name,
+                voyage_api_key=voyage_api_key,
+                truncation=True,
+                embed_batch_size=batch_size
             )
         else:
             self.embed_model = HuggingFaceEmbedding(
@@ -173,9 +182,20 @@ class EmbedScorer(BaseScorer):
     def __call__(self, query: str, docs: ChunkedRepo) -> ChunkedRepo:
         # Init vector base
         if docs.dense_retriever is None or (not self.do_cache):
-            docs.dense_retriever = self.get_retriever(
-                [chunk.prompt for chunk in docs.chunks]
-            )
+            texts = [chunk.prompt for chunk in docs.chunks]
+            for i in range(5):
+                try:
+                    docs.dense_retriever = self.get_retriever(texts)
+                    break
+                except Exception as e:
+                    print(e)
+
+                print("Waiting 30 s for the nex request")
+                time.sleep(30)
+
+            if docs.dense_retriever is None:
+                return None
+
         retriever = docs.dense_retriever
         with disable_tqdm():
             scored_chunks = retriever.retrieve(query)

@@ -16,8 +16,8 @@ from rag.rag_engine.scorers import get_scorer
 from rag.rag_engine.splitters import get_splitter
 from rag.rag_engine.chunkers import get_chunker
 from gpu_distributor import set_gpu
+from utils.utils import get_file_lengths
 
-# TODO refactor
 
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
@@ -55,6 +55,8 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
     if exclusion(config.rag.scorer, config.rag.splitter, config.rag.n_grams_max):
         print("Skipping this configuration")
         return None
+
+    # get_file_lengths(dataset)
 
     results, summary = evaluate_scorer(
         dataset, chunker, scorer, run_info, limit=config.limit

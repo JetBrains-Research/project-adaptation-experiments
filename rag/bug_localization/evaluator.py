@@ -89,17 +89,18 @@ def run_benchmark(dataset, chunker, scorer, limit=-1, ) -> pd.DataFrame:
         repo_chunked = chunker(repo)
         start_time = time.time()
         repo_chunked = scorer(issue_description, repo_chunked)
-        end_time = time.time()
-        scored_chunked_files = [(chunk.filename, chunk.score) for chunk in repo_chunked.chunks]
-        scored_files = aggregate_and_sort_scores(scored_chunked_files, method=chunker.score_agg)
-        item_copy = item.copy()
-        del item_copy["repo_content"]
-        item_copy["time_s"] = end_time - start_time
-        item_copy["scores"] = scored_files
-        results_ds.append(item_copy)
-        i += 1
-        if limit > 0 and i > limit:
-            break
+        if repo_chunked is not None:
+            end_time = time.time()
+            scored_chunked_files = [(chunk.filename, chunk.score) for chunk in repo_chunked.chunks]
+            scored_files = aggregate_and_sort_scores(scored_chunked_files, method=chunker.score_agg)
+            item_copy = item.copy()
+            del item_copy["repo_content"]
+            item_copy["time_s"] = end_time - start_time
+            item_copy["scores"] = scored_files
+            results_ds.append(item_copy)
+            i += 1
+            if limit > 0 and i > limit:
+                break
 
     return pd.DataFrame(results_ds)
 
