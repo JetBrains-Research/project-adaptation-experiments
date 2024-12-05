@@ -5,6 +5,7 @@ import statistics
 
 import pandas as pd
 from tqdm import tqdm
+import os
 
 from rag.metrics.metrics import calc_f1, calc_ndcg
 
@@ -151,6 +152,9 @@ def save_append_df(df: pd.DataFrame, file: str | Path) -> None:
 
 
 def save_results(results, summary, result_folder: str, results_filename: str) -> None:
+
+    result_folder = Path(result_folder)
+    result_folder.mkdir(parents=True, exist_ok=True)
     summary_file = Path(result_folder) / Path(results_filename)
     detailed_file = summary_file.with_stem(summary_file.stem + "_detailed")
 
