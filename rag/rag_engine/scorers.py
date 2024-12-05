@@ -123,6 +123,8 @@ class EmbedScorer(BaseScorer):
             "intfloat/multilingual-e5-base",
         ]
         self.instruct_models = ["intfloat/multilingual-e5-large-instruct"]
+        batch_size = 50
+        context_len = None
 
         # Instructions for bug localization
         instruction = "Given a question, retrieve code passages relevant to the query."
@@ -134,6 +136,9 @@ class EmbedScorer(BaseScorer):
             # https://github.com/ContextualAI/gritlm?tab=readme-ov-file#inference
             query_prefix = f"<|user|>\n{instruction}\n<|embed|>\n"
             text_prefix = "<|embed|>\n"
+            # This value is for A100-80Gb GPU
+            batch_size = 1
+            context_len = 32000
         # if embed_model_name == "intfloat/multilingual-e5-large-instruct" or embed_model_name.endswith("instruct"):
         else:
             # https://huggingface.co/intfloat/multilingual-e5-large-instruct
@@ -162,9 +167,10 @@ class EmbedScorer(BaseScorer):
         else:
             self.embed_model = HuggingFaceEmbedding(
                 embed_model_name,
-                embed_batch_size=100,
+                embed_batch_size=batch_size,
                 query_instruction=query_prefix,
                 text_instruction=text_prefix,
+                max_length=context_len,
             )
 
     def get_retriever(self, docs: list[str]) -> BaseRetriever:
