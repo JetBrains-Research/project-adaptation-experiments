@@ -27,7 +27,7 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
         job_id = HydraConfig.get().job.num
         set_gpu(job_id)
     except:
-        pass
+        set_gpu()
 
     config_rag = config.rag
     run_info = get_info_dict(config)
