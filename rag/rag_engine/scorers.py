@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import contextlib
 import sys
 import os
+from transformers import AutoTokenizer
 
 from rag.data_loading import ChunkedRepo
 from rag.rag_engine.splitters import BaseSplitter
@@ -113,6 +114,7 @@ class EmbedScorer(BaseScorer):
         embed_model_name,
         do_cache: bool = True,
         task: str = "completion",
+        max_tokens: int | None = None,
         **kwargs,
     ):
         self.do_cache = do_cache
@@ -123,8 +125,9 @@ class EmbedScorer(BaseScorer):
             "intfloat/multilingual-e5-base",
         ]
         self.instruct_models = ["intfloat/multilingual-e5-large-instruct"]
+        self.max_tokens = max_tokens
+        self.truncate = isinstance(max_tokens, int)
         batch_size = 50
-        context_len = None
 
         # Instructions for bug localization
         instruction = "Given a question, retrieve code passages relevant to the query."
@@ -138,7 +141,7 @@ class EmbedScorer(BaseScorer):
             text_prefix = "<|embed|>\n"
             # This value is for A100-80Gb GPU
             batch_size = 1
-            context_len = 32000
+            max_tokens = 32000
         # if embed_model_name == "intfloat/multilingual-e5-large-instruct" or embed_model_name.endswith("instruct"):
         else:
             # https://huggingface.co/intfloat/multilingual-e5-large-instruct
@@ -152,26 +155,42 @@ class EmbedScorer(BaseScorer):
             query_prefix = text_prefix
 
         if embed_model_name.startswith("voyage-"):
+            self.tokenizer = AutoTokenizer.from_pretrained(f'voyageai/{embed_model_name}')
             batch_size = None
             if embed_model_name == "voyage-code-3":
                 # For this model the max allowed tokens per submitted batch is 120_000
                 # The max context size 30_000, just in case I've made a butch 2 times small, than it needs to be.
-                batch_size = 2
+                # max batch size of the model = 128
+                if self.truncate:
+                    batch_size = min(128, 110_000//max_tokens)
+                else:
+                    batch_size = 3
             voyage_api_key = os.environ.get("VOYAGE_API_KEY")
             self.embed_model = VoyageEmbedding(
                 model_name=embed_model_name,
                 voyage_api_key=voyage_api_key,
                 truncation=True,
-                embed_batch_size=batch_size
+                embed_batch_size=batch_size,
             )
         else:
+            self.truncate = False
             self.embed_model = HuggingFaceEmbedding(
                 embed_model_name,
                 embed_batch_size=batch_size,
                 query_instruction=query_prefix,
                 text_instruction=text_prefix,
-                max_length=context_len,
+                max_length=max_tokens,
             )
+
+    def truncate_texts(self, texts):
+        tokes_batch = self.tokenizer.batch_encode_plus(
+            texts,
+            max_length=self.max_tokens,
+            truncation=True,
+        )
+        decoded_texts = [self.tokenizer.decode(ids, skip_special_tokens=True) for ids in tokes_batch['input_ids']]
+
+        return decoded_texts
 
     def get_retriever(self, docs: list[str]) -> BaseRetriever:
         nodes = [TextNode(text=chunk) for chunk in docs]
@@ -187,8 +206,11 @@ class EmbedScorer(BaseScorer):
 
     def __call__(self, query: str, docs: ChunkedRepo) -> ChunkedRepo:
         # Init vector base
+        texts = [chunk.prompt for chunk in docs.chunks]
+        if self.truncate:
+            texts = self.truncate_texts(texts)
+            query = self.truncate_texts([query])[0]
         if docs.dense_retriever is None or (not self.do_cache):
-            texts = [chunk.prompt for chunk in docs.chunks]
             for i in range(5):
                 try:
                     docs.dense_retriever = self.get_retriever(texts)
@@ -196,7 +218,7 @@ class EmbedScorer(BaseScorer):
                 except Exception as e:
                     print(e)
 
-                print("Waiting 30 s for the nex request")
+                print("Waiting 30 s for the next request")
                 time.sleep(30)
 
             if docs.dense_retriever is None:
@@ -205,11 +227,10 @@ class EmbedScorer(BaseScorer):
         retriever = docs.dense_retriever
         with disable_tqdm():
             scored_chunks = retriever.retrieve(query)
-
         # That's inefficient. Think about moving everything to llama-index API and dataclasses
         scored_chunks_dict = {node.text: node.score for node in scored_chunks}
-        for chunk in docs.chunks:
-            chunk.score = scored_chunks_dict[chunk.prompt]
+        for chunk, text in zip(docs.chunks, texts):
+            chunk.score = scored_chunks_dict[text]
 
         return docs
 

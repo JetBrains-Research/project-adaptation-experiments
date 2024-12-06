@@ -39,6 +39,7 @@ def run_bug_localization(config: DictConfig) -> pd.DataFrame | None:
         splitter=splitter,
         embed_model_name=config_rag.embed_model,
         task="bug_localization",
+        max_tokens=config_rag.max_tokens
     )
     chunk_kwargs = {
         "chunk_lines_size": config_rag.chunk_lines_size,
