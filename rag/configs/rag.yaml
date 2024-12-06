@@ -5,13 +5,15 @@ rag:
   scorer: "dense" # ["bm25", "iou", "dense"]
   chunker: "full_file" #["full_file", "fixed_line", "langchain"]
   embed_model: "intfloat/multilingual-e5-small"
+  max_tokens: 10
   # "intfloat/multilingual-e5-large-instruct"
   # intfloat/multilingual-e5-small
   # intfloat/multilingual-e5-base
   # GritLM/GritLM-7B
   # "voyage-3"
   # "voyage-3-lite"
-  use_n_grams: true
+  # "voyage-code-3"
+  use_n_grams: True
   n_grams_min: 1
   n_grams_max: 1
   chunk_lines_size: 64 #[8, 16, 32, 64, 128]
