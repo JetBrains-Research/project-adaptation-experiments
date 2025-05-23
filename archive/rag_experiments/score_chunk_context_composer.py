@@ -63,10 +63,10 @@ class ChunkScoreComposer(BaseContextComposer):
             repo_snapshot.add_item(
                 filename=completion_item["filename"], content=completion_item["prefix"]
             )
-        # chunk repo
+        # chunk_pipeline.png repo
         chunked_repo = self.chunker(repo_snapshot, **self.chunk_kwargs)
 
-        # save last chunk of completion prefix or just completion prefix
+        # save last chunk_pipeline.png of completion prefix or just completion prefix
         self.last_chunk = FileStorage(
             filename=completion_item["filename"], content=completion_item["prefix"]
         )

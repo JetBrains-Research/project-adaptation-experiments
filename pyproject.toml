@@ -2,7 +2,7 @@
 name = "project-adaptation-experiments"
 version = "0.1.0"
 description = "Benchmark for models that write a code for drawing a plot"
-authors = ["Timur Galimzyanov <timur.galimzyanov@jetbrains.com>"]
+authors = ["Timur Galimzyanov <timur.galimzyanov@jetbrains.com> Olga Kolomyttseva <olga.kolomyttseva@jetbrains.com>"]
 readme = "README.md"
 package-mode = false
 
